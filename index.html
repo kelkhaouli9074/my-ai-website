@@ -1,445 +1,78 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#080d19">
-<title>MY AI — Your personal AI</title>
-
-<style>
-:root {
-  --bg:#080d19;
-  --line:#26334a;
-  --text:#edf3ff;
-  --muted:#91a0b8;
-  --blue:#5b8cff;
-  --cyan:#56d8e8;
-}
-* { box-sizing:border-box; }
-body {
-  margin:0;
-  background:radial-gradient(ellipse at 20% 0%,#172a50 0,transparent 38%),var(--bg);
-  color:var(--text);
-  font:15px/1.5 Inter,system-ui,Arial,sans-serif;
-  min-height:100vh;
-}
-button,textarea { font:inherit; }
-button { cursor:pointer; }
-.app {
-  display:grid;
-  grid-template-columns:260px 1fr;
-  min-height:100vh;
-  max-width:1500px;
-  margin:auto;
-}
-aside {
-  border-right:1px solid var(--line);
-  padding:24px 17px;
-  background:#0b1220cc;
-  display:flex;
-  flex-direction:column;
-  gap:22px;
-}
-.brand {
-  display:flex;
-  align-items:center;
-  gap:11px;
-  font-size:20px;
-  font-weight:800;
-  padding:4px 7px;
-}
-.logo,.orb {
-  background:linear-gradient(135deg,var(--blue),var(--cyan));
-  display:grid;
-  place-items:center;
-  color:#07101e;
-  font-weight:900;
-}
-.logo {
-  width:38px;
-  height:38px;
-  border-radius:13px;
-  font-size:20px;
-}
-.new {
-  border:1px solid #4264a0;
-  background:#162746;
-  color:#eaf1ff;
-  border-radius:12px;
-  padding:12px;
-  text-align:left;
-  font-weight:650;
-}
-.navtitle {
-  font-size:11px;
-  color:#71819c;
-  text-transform:uppercase;
-  letter-spacing:1.3px;
-  margin:2px 8px;
-}
-.navitem {
-  padding:10px 11px;
-  border-radius:10px;
-  color:#b7c4d9;
-  display:flex;
-  gap:11px;
-  align-items:center;
-}
-.navitem.active {
-  background:#1a2a46;
-  color:#fff;
-}
-.side-note {
-  margin-top:auto;
-  border:1px solid var(--line);
-  background:#101a2b;
-  border-radius:13px;
-  padding:13px;
-  color:var(--muted);
-  font-size:12px;
-}
-main {
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  min-height:100vh;
-}
-header {
-  height:70px;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 30px;
-}
-.model { color:#c6d3e8; font-weight:650; }
-.status {
-  font-size:12px;
-  color:#a8bad4;
-  border:1px solid var(--line);
-  padding:6px 10px;
-  border-radius:30px;
-}
-.content {
-  width:min(850px,calc(100% - 36px));
-  margin:0 auto;
-  display:flex;
-  flex-direction:column;
-  flex:1;
-  padding:55px 0 25px;
-}
-.welcome { text-align:center; margin:auto auto 28px; }
-.orb {
-  width:64px;
-  height:64px;
-  margin:0 auto 18px;
-  border-radius:22px;
-  font-size:29px;
-  box-shadow:0 12px 45px #458dff40;
-}
-h1 {
-  font-size:clamp(27px,5vw,39px);
-  line-height:1.15;
-  margin:0 0 12px;
-  letter-spacing:-1.1px;
-}
-.sub { color:var(--muted); margin:0; }
-.suggestions {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:11px;
-  margin:0 0 22px;
-}
-.suggestion {
-  background:#101a2a;
-  border:1px solid var(--line);
-  border-radius:13px;
-  padding:14px;
-  text-align:left;
-  color:#dbe6f7;
-}
-.suggestion:hover {
-  border-color:#638ee0;
-  background:#15243b;
-}
-.suggestion strong {
-  display:block;
-  font-size:13px;
-  margin-bottom:4px;
-}
-.suggestion span { font-size:12px; color:var(--muted); }
-.chat {
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-  margin:0 0 20px;
-}
-.msg {
-  max-width:85%;
-  padding:13px 16px;
-  border-radius:15px;
-  white-space:pre-wrap;
-  overflow-wrap:anywhere;
-}
-.user {
-  align-self:flex-end;
-  background:#244579;
-  color:white;
-  border-bottom-right-radius:5px;
-}
-.assistant {
-  align-self:flex-start;
-  background:#121e30;
-  border:1px solid var(--line);
-  border-bottom-left-radius:5px;
-}
-.composer {
-  border:1px solid #34435c;
-  background:#111b2b;
-  border-radius:17px;
-  padding:12px;
-  box-shadow:0 12px 40px #0003;
-}
-textarea {
-  width:100%;
-  resize:vertical;
-  min-height:54px;
-  max-height:180px;
-  background:transparent;
-  border:0;
-  outline:0;
-  color:var(--text);
-  padding:6px 7px;
-}
-textarea::placeholder { color:#7889a4; }
-.composebottom {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:5px 3px 0;
-  color:#8191aa;
-  font-size:11px;
-}
-.send {
-  border:0;
-  border-radius:11px;
-  padding:9px 16px;
-  background:linear-gradient(135deg,var(--blue),#4ebedb);
-  color:#06101e;
-  font-weight:800;
-}
-.send:disabled { opacity:.5; cursor:not-allowed; }
-.foot {
-  text-align:center;
-  color:#71819a;
-  font-size:11px;
-  padding:15px 0 0;
-}
-.hidden { display:none!important; }
-
-@media(max-width:720px) {
-  .app { grid-template-columns:1fr; }
-  aside { display:none; }
-  header { padding:0 18px; }
-  .content { padding-top:38px; }
-  .suggestions { grid-template-columns:1fr; }
-  .msg { max-width:94%; }
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08090c">
+  <title>MY AI</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
-<div class="app">
+  <div class="backdrop"></div>
+  <main id="authScreen" class="auth-layout">
+    <section class="brand-side">
+      <div class="brand-mark">✧</div>
+      <div class="brand-name">MY <span>AI</span></div>
+      <p class="tagline">Your Smart Assistant...</p>
+      <div class="features">
+        <div><b>✦</b><span>Chat<br>Smartly</span></div>
+        <div><b>▧</b><span>Generate<br>Images</span></div>
+        <div><b>◈</b><span>Explore<br>More</span></div>
+      </div>
+      <p class="quote">“Unlock the power of AI”</p>
+    </section>
 
-<aside>
-  <div class="brand">
-    <div class="logo">M</div> MY AI
-  </div>
+    <section class="auth-card glass">
+      <div class="small-logo">✧</div>
+      <h1 id="authTitle">Welcome Back</h1>
+      <p id="authSubtitle">Sign in to continue your journey with MY AI</p>
+      <form id="authForm">
+        <label class="field"><span>✉</span><input id="email" type="email" placeholder="Email address" autocomplete="email" required></label>
+        <label class="field"><span>●</span><input id="password" type="password" placeholder="Password (at least 6 characters)" autocomplete="current-password" minlength="6" required></label>
+        <div class="auth-options"><label><input id="showPassword" type="checkbox"> Show password</label><button type="button" class="text-button" id="forgotBtn">Forgot password?</button></div>
+        <button class="primary-btn" id="authSubmit" type="submit">Sign In</button>
+      </form>
+      <p class="switch-auth"><span id="switchText">Don't have an account?</span> <button class="text-button" id="switchMode" type="button">Sign Up</button></p>
+      <p id="authMessage" class="message" role="status"></p>
+      <p class="fine-print">Your account is securely managed by Supabase.</p>
+    </section>
+  </main>
 
-  <button class="new" id="newChat">＋ &nbsp; New chat</button>
+  <main id="appScreen" class="app-layout hidden">
+    <aside class="sidebar glass">
+      <div class="side-brand"><div class="small-logo">✧</div><strong>MY <span>AI</span></strong><small>Your Smart Assistant...</small></div>
+      <nav>
+        <button class="nav-item active" data-view="chat">▣ <span>Chat</span></button>
+        <button class="nav-item" id="imageNav">▧ <span>Generate Image</span></button>
+        <button class="nav-item" id="historyNav">◷ <span>History</span></button>
+        <button class="nav-item" id="settingsNav">⚙ <span>Settings</span></button>
+        <button class="nav-item" id="aboutNav">ⓘ <span>About</span></button>
+      </nav>
+      <div class="side-bottom">
+        <div class="premium"><b>♛</b><strong>MY AI</strong><small>Smarter. Faster. Simpler.</small></div>
+        <button class="nav-item" id="logoutBtn">↪ <span>Sign Out</span></button>
+      </div>
+    </aside>
 
-  <div>
-    <div class="navtitle">Workspace</div>
-    <div class="navitem active">◉ &nbsp; AI Chat</div>
-    <div class="navitem">▧ &nbsp; Image generator <span style="margin-left:auto;font-size:10px;color:#8292aa">Soon</span></div>
-    <div class="navitem">▷ &nbsp; Video generator <span style="margin-left:auto;font-size:10px;color:#8292aa">Soon</span></div>
-  </div>
-
-  <div class="side-note">
-    MY AI is your personal AI workspace.
-    Image and video tools are coming soon.
-  </div>
-</aside>
-
-<main>
-<header>
-  <div class="model">
-    MY AI <span style="color:#71819a;font-weight:400">/ Assistant</span>
-  </div>
-  <div class="status" id="status">● Checking...</div>
-</header>
-
-<section class="content">
-
-<div class="welcome" id="welcome">
-  <div class="orb">M</div>
-  <h1>What can I help you with?</h1>
-  <p class="sub">Your personal AI assistant, ready for a conversation.</p>
-</div>
-
-<div class="chat" id="chat"></div>
-
-<div class="suggestions" id="suggestions">
-  <button class="suggestion" data-prompt="Explain artificial intelligence in simple words.">
-    <strong>✦ Learn something</strong>
-    <span>Explain a topic in simple words</span>
-  </button>
-
-  <button class="suggestion" data-prompt="Help me write a clear and professional email.">
-    <strong>✎ Write something</strong>
-    <span>Draft or improve a piece of writing</span>
-  </button>
-
-  <button class="suggestion" data-prompt="Give me a step-by-step plan to learn programming.">
-    <strong>⌘ Make a plan</strong>
-    <span>Break a goal into manageable steps</span>
-  </button>
-
-  <button class="suggestion" data-prompt="Give me three creative project ideas using AI.">
-    <strong>✧ Brainstorm ideas</strong>
-    <span>Explore creative directions</span>
-  </button>
-</div>
-
-<div class="composer">
-  <textarea id="prompt" rows="2" placeholder="Message MY AI..."></textarea>
-  <div class="composebottom">
-    <span>Enter to send · Shift + Enter for a new line</span>
-    <button class="send" id="send">Send ↑</button>
-  </div>
-</div>
-
-<div class="foot">
-  MY AI can make mistakes. Check important information.
-</div>
-
-</section>
-</main>
-</div>
-
-<script>
-// Vercel API — no Colab or Cloudflare
-const MY_AI_API_URL = "/api/chat";
-
-const chat = document.getElementById("chat");
-const promptBox = document.getElementById("prompt");
-const welcome = document.getElementById("welcome");
-const suggestions = document.getElementById("suggestions");
-const sendButton = document.getElementById("send");
-const status = document.getElementById("status");
-
-let history = [];
-let busy = false;
-
-function addMessage(role, text) {
-  const el = document.createElement("div");
-  el.className = "msg " + role;
-  el.textContent = text;
-  chat.appendChild(el);
-  el.scrollIntoView({behavior:"smooth",block:"nearest"});
-  return el;
-}
-
-async function sendMessage(text) {
-  text = (text || "").trim();
-  if (!text || busy) return;
-
-  welcome.classList.add("hidden");
-  suggestions.classList.add("hidden");
-
-  addMessage("user", text);
-  promptBox.value = "";
-
-  const waiting = addMessage("assistant", "Thinking...");
-  busy = true;
-  sendButton.disabled = true;
-  status.textContent = "● Working...";
-
-  try {
-    const response = await fetch(MY_AI_API_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        message:text,
-        history:history
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || ("HTTP " + response.status));
-    }
-
-    const answer =
-      data.reply || data.answer || data.response || data.message;
-
-    if (!answer) {
-      throw new Error("No answer returned by API");
-    }
-
-    waiting.textContent = answer;
-
-    history.push(
-      {role:"user",content:text},
-      {role:"assistant",content:answer}
-    );
-
-    status.textContent = "● Connected";
-
-  } catch(error) {
-    waiting.textContent =
-      "Connection error: " + error.message +
-      "\nPlease check your Vercel API settings.";
-
-    status.textContent = "● Connection error";
-    console.error("MY AI error:",error);
-
-  } finally {
-    busy = false;
-    sendButton.disabled = false;
-    promptBox.focus();
-  }
-}
-
-sendButton.addEventListener("click", () => {
-  sendMessage(promptBox.value);
-});
-
-promptBox.addEventListener("keydown", event => {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage(promptBox.value);
-  }
-});
-
-document.querySelectorAll("[data-prompt]").forEach(button => {
-  button.addEventListener("click", () => {
-    sendMessage(button.dataset.prompt);
-  });
-});
-
-document.getElementById("newChat").addEventListener("click", () => {
-  chat.innerHTML = "";
-  history = [];
-  welcome.classList.remove("hidden");
-  suggestions.classList.remove("hidden");
-  promptBox.value = "";
-  status.textContent = "● Ready";
-  promptBox.focus();
-});
-
-</script>
+    <section class="chat-panel glass">
+      <header class="chat-header">
+        <div class="header-brand"><div class="small-logo">✧</div><div><strong>MY AI</strong><small>Always here to help you</small></div></div>
+        <div class="user-status"><i></i> Online</div>
+      </header>
+      <div id="chatMessages" class="messages">
+        <div class="welcome">
+          <h2>Welcome to MY AI</h2>
+          <p>Ask a question and let's get started.</p>
+        </div>
+      </div>
+      <form id="chatForm" class="composer">
+        <textarea id="messageInput" rows="1" placeholder="Type your message..." required></textarea>
+        <button type="submit" aria-label="Send message">➤</button>
+      </form>
+      <p class="disclaimer">MY AI can make mistakes. Check important information.</p>
+    </section>
+  </main>
+  <script src="app.js"></script>
 </body>
 </html>
