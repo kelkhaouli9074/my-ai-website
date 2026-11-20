@@ -4,84 +4,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080d19">
-
-  <title>MY AI — Your personal AI</title>
+  <meta name="theme-color" content="#080b12">
+  <title>MY AI — Intelligent Assistant</title>
 
   <link rel="stylesheet" href="/style.css">
 
-  <!-- MathJax configuration -->
   <script>
     window.MathJax = {
       tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']]
       },
-      svg: {
-        fontCache: 'global'
-      },
-      startup: {
-        typeset: false
-      }
+      svg: { fontCache: 'global' },
+      startup: { typeset: false }
     };
   </script>
-
-  <!-- MathJax library -->
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 
 <body>
-
   <div class="app">
 
     <aside class="sidebar">
-      <div class="logo">MY AI</div>
+      <div class="brand">
+        <div class="brand-icon">M</div>
+        <span>MY AI</span>
+      </div>
 
       <button id="new-chat-btn" class="new-chat-btn">
-        + New Chat
+        <span class="plus">＋</span>
+        <span>New Chat</span>
       </button>
 
-      <div class="sidebar-bottom">
-        <p>MY AI Assistant</p>
+      <div class="sidebar-label">YOUR ASSISTANT</div>
+
+      <div class="sidebar-info">
+        <span class="status-dot"></span>
+        MY AI Assistant
+      </div>
+
+      <div class="sidebar-footer">
+        <span class="footer-icon">✦</span>
+        <span>Powered by AI</span>
       </div>
     </aside>
 
     <main class="main">
 
       <header class="topbar">
-        <h2>MY AI</h2>
+        <div class="mobile-brand">
+          <div class="brand-icon">M</div>
+          <span>MY AI</span>
+        </div>
+        <div class="online-status">
+          <span class="status-dot"></span>
+          AI Assistant
+        </div>
       </header>
 
       <section id="chat-messages" class="chat-messages">
 
         <div class="welcome" id="welcome">
+          <div class="welcome-icon">✦</div>
+          <div class="welcome-tag">YOUR PERSONAL AI</div>
           <h1>What can I help you with?</h1>
-          <p>Ask anything. Let's get started.</p>
+          <p>Ask questions, explore ideas, or learn something new.</p>
+
+          <div class="suggestions">
+            <button type="button" class="suggestion"
+              data-prompt="Explain a difficult scientific concept simply.">
+              <span>◈</span>
+              <div>
+                <strong>Learn something</strong>
+                <small>Understand difficult concepts</small>
+              </div>
+            </button>
+
+            <button type="button" class="suggestion"
+              data-prompt="Help me solve a mathematics problem step by step.">
+              <span>∑</span>
+              <div>
+                <strong>Mathematics</strong>
+                <small>Equations and calculations</small>
+              </div>
+            </button>
+
+            <button type="button" class="suggestion"
+              data-prompt="Give me creative ideas for a new project.">
+              <span>✧</span>
+              <div>
+                <strong>Explore ideas</strong>
+                <small>Discover new possibilities</small>
+              </div>
+            </button>
+
+            <button type="button" class="suggestion"
+              data-prompt="Help me write and improve some code.">
+              <span>⌘</span>
+              <div>
+                <strong>Write code</strong>
+                <small>Build and improve projects</small>
+              </div>
+            </button>
+          </div>
         </div>
 
       </section>
 
-      <div class="composer-container">
+      <footer class="composer-area">
         <form id="chat-form" class="composer">
-
           <textarea
             id="message-input"
             placeholder="Message MY AI..."
             rows="1"
+            aria-label="Write your message"
           ></textarea>
 
-          <button type="submit" id="send-btn">
+          <button type="submit" id="send-btn" aria-label="Send message">
             ↑
           </button>
-
         </form>
-      </div>
+
+        <p class="disclaimer">
+          MY AI can make mistakes. Verify important information.
+        </p>
+      </footer>
 
     </main>
-
   </div>
 
   <script src="/app.js"></script>
-
 </body>
 </html>
