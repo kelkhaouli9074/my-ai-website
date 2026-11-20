@@ -1,9 +1,9 @@
 
-
 const form = document.getElementById("chat-form");
 const input = document.getElementById("message-input");
 const messages = document.getElementById("chat-messages");
 const sendBtn = document.getElementById("send-btn");
+const newChatBtn = document.getElementById("new-chat-btn");
 
 let history = [];
 
@@ -13,8 +13,6 @@ function addMessage(text, type) {
 
   const div = document.createElement("div");
   div.className = "message " + type;
-
-  // Keep user messages as plain text.
   div.textContent = text;
 
   messages.appendChild(div);
@@ -24,24 +22,25 @@ function addMessage(text, type) {
 }
 
 async function renderMath(element) {
-  if (window.MathJax && window.MathJax.typesetPromise) {
-    try {
-      await window.MathJax.typesetPromise([element]);
-    } catch (error) {
-      console.error("MathJax error:", error);
-    }
+  if (!window.MathJax) return;
+
+  try {
+    await window.MathJax.startup.promise;
+    await window.MathJax.typesetPromise([element]);
+  } catch (error) {
+    console.error("MathJax error:", error);
   }
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
+async function sendMessage() {
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || sendBtn.disabled) return;
 
   addMessage(text, "user");
 
   input.value = "";
+  input.style.height = "auto";
+
   input.disabled = true;
   sendBtn.disabled = true;
 
@@ -69,10 +68,8 @@ form.addEventListener("submit", async (event) => {
       throw new Error("Empty response");
     }
 
-    // Render AI response as text first.
     loading.textContent = data.reply;
 
-    // Format mathematical equations.
     await renderMath(loading);
 
     history.push(
@@ -86,16 +83,80 @@ form.addEventListener("submit", async (event) => {
     input.disabled = false;
     sendBtn.disabled = false;
     input.focus();
+    messages.scrollTop = messages.scrollHeight;
+  }
+}
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  sendMessage();
+});
+
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 150) + "px";
+});
+
+input.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    form.requestSubmit();
   }
 });
 
-document.getElementById("new-chat-btn").addEventListener("click", () => {
+newChatBtn.addEventListener("click", () => {
   history = [];
 
   messages.innerHTML = `
     <div class="welcome" id="welcome">
+      <div class="welcome-icon">✦</div>
+      <div class="welcome-tag">YOUR PERSONAL AI</div>
       <h1>What can I help you with?</h1>
-      <p>Ask anything. Let's get started.</p>
+      <p>Ask questions, explore ideas, or learn something new.</p>
+
+      <div class="suggestions">
+        <button type="button" class="suggestion"
+          data-prompt="Explain a difficult scientific concept simply.">
+          <span>◈</span>
+          <div><strong>Learn something</strong>
+          <small>Understand difficult concepts</small></div>
+        </button>
+
+        <button type="button" class="suggestion"
+          data-prompt="Help me solve a mathematics problem step by step.">
+          <span>∑</span>
+          <div><strong>Mathematics</strong>
+          <small>Equations and calculations</small></div>
+        </button>
+
+        <button type="button" class="suggestion"
+          data-prompt="Give me creative ideas for a new project.">
+          <span>✧</span>
+          <div><strong>Explore ideas</strong>
+          <small>Discover new possibilities</small></div>
+        </button>
+
+        <button type="button" class="suggestion"
+          data-prompt="Help me write and improve some code.">
+          <span>⌘</span>
+          <div><strong>Write code</strong>
+          <small>Build and improve projects</small></div>
+        </button>
+      </div>
     </div>
   `;
+
+  input.value = "";
+  input.style.height = "auto";
+  input.focus();
+});
+
+messages.addEventListener("click", (event) => {
+  const suggestion = event.target.closest(".suggestion");
+  if (!suggestion) return;
+
+  input.value = suggestion.dataset.prompt;
+  input.focus();
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 150) + "px";
 });
