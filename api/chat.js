@@ -1,114 +1,89 @@
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+const API_URL = "/api/chat";
 
-  const apiKey = process.env.GEMINI_API_KEY;
+const form = document.getElementById("chat-form");
+const input = document.getElementById("message-input");
+const messages = document.getElementById("chat-messages");
+const newChatBtn = document.getElementById("new-chat-btn");
+const sendBtn = document.getElementById("send-btn");
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "API key missing" });
-  }
+let history = [];
 
-  const { message, history = [] } = req.body || {};
+function addMessage(text, type) {
+  const welcome = document.getElementById("welcome");
+  if (welcome) welcome.remove();
 
-  if (typeof message !== "string" || !message.trim()) {
-    return res.status(400).json({ error: "Message is required" });
-  }
+  const message = document.createElement("div");
+  message.className = "message " + type;
+  message.textContent = text;
+  messages.appendChild(message);
+  messages.scrollTop = messages.scrollHeight;
 
-  const contents = [];
-
-  for (const item of history.slice(-6)) {
-    if (!item || typeof item.content !== "string") continue;
-
-    contents.push({
-      role: item.role === "assistant" ? "model" : "user",
-      parts: [{ text: item.content.slice(0, 4000) }]
-    });
-  }
-
-  contents.push({
-    role: "user",
-    parts: [{ text: message.slice(0, 4000) }]
-  });
-
-  const url =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
-
-  // Retry only temporary server overload errors
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 25000);
-
-      let response;
-
-      try {
-        response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": apiKey
-          },
-          body: JSON.stringify({
-            contents,
-            generationConfig: {
-              maxOutputTokens: 600,
-              temperature: 0.7
-            }
-          }),
-          signal: controller.signal
-        });
-      } finally {
-        clearTimeout(timeout);
-      }
-
-      const data = await response.json();
-
-      if (response.status === 503 ||
-          response.status === 502 ||
-          response.status === 504 ||
-          response.status === 500) {
-
-        if (attempt < 2) {
-          await new Promise(resolve =>
-            setTimeout(resolve, 1000 * (attempt + 1))
-          );
-          continue;
-        }
-      }
-
-      if (!response.ok) {
-        return res.status(response.status).json({
-          error: data.error?.message || "Gemini request failed"
-        });
-      }
-
-      const reply = data.candidates?.[0]?.content?.parts
-        ?.map(part => part.text || "")
-        .join("");
-
-      if (!reply) {
-        return res.status(502).json({
-          error: "The AI returned an empty response"
-        });
-      }
-
-      return res.status(200).json({ reply });
-
-    } catch (error) {
-      if (attempt < 2 && error.name !== "AbortError") {
-        await new Promise(resolve =>
-          setTimeout(resolve, 1000 * (attempt + 1))
-        );
-        continue;
-      }
-
-      return res.status(504).json({
-        error: error.name === "AbortError"
-          ? "The AI took too long. Please try again."
-          : "Connection failed. Please try again."
-      });
-    }
-  }
+  return message;
 }
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+  input.disabled = true;
+  sendBtn.disabled = true;
+
+  const loading = addMessage("Thinking...", "assistant");
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: text,
+        history: history
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Connection error");
+    }
+
+    const reply = data.reply || data.text || "No response received.";
+    loading.textContent = reply;
+
+    history.push(
+      { role: "user", content: text },
+      { role: "assistant", content: reply }
+    );
+
+  } catch (error) {
+    loading.textContent = "Error: " + error.message;
+  } finally {
+    input.disabled = false;
+    sendBtn.disabled = false;
+    input.focus();
+  }
+});
+
+newChatBtn.addEventListener("click", () => {
+  history = [];
+  messages.innerHTML = `
+    <div class="welcome" id="welcome">
+      <h1>What can I help you with?</h1>
+      <p>Ask anything. Let's get started.</p>
+    </div>
+  `;
+});
+
+document.getElementById("image-btn").addEventListener("click", () => {
+  addMessage("Image Generator is coming soon.", "assistant");
+});
+
+document.getElementById("video-btn").addEventListener("click", () => {
+  addMessage("Video Generator is coming soon.", "assistant");
+});
