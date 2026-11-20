@@ -19,40 +19,32 @@ export default async function handler(req, res) {
 
     if (!apiKey) {
       return res.status(500).json({
-        error: "GEMINI_API_KEY is missing"
+        error: "GEMINI_API_KEY is missing in Vercel"
       });
     }
 
-    const contents = [];
+    const previousMessages = Array.isArray(history)
+      ? history.slice(-10).map(item => {
+          const role = item.role === "assistant" ? "AI" : "User";
+          return role + ": " + String(item.content || "");
+        }).join("\n")
+      : "";
 
-    for (const item of history.slice(-12)) {
-      if (!item || !item.content) continue;
-
-      contents.push({
-        role: item.role === "assistant" ? "model" : "user",
-        parts: [{ text: String(item.content) }]
-      });
-    }
-
-    contents.push({
-      role: "user",
-      parts: [{ text: message }]
-    });
+    const prompt = previousMessages
+      ? previousMessages + "\nUser: " + message
+      : message;
 
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" +
-      encodeURIComponent(apiKey),
+      "https://generativelanguage.googleapis.com/v1beta/interactions",
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
         },
         body: JSON.stringify({
-          contents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000
-          }
+          model: "gemini-3.8-flash",
+          input: prompt
         })
       }
     );
@@ -67,21 +59,27 @@ export default async function handler(req, res) {
       });
     }
 
-    const reply =
-      data.candidates?.[0]?.content?.parts
-        ?.map(part => part.text || "")
-        .join("") || "";
+    let reply = data.output_text || "";
+
+    if (!reply && Array.isArray(data.steps)) {
+      reply = data.steps
+        .filter(step => step.type === "model_output")
+        .flatMap(step => step.content || [])
+        .filter(part => part.type === "text")
+        .map(part => part.text)
+        .join("");
+    }
 
     if (!reply) {
       return res.status(502).json({
-        error: "The AI returned an empty response"
+        error: "Gemini returned an empty response"
       });
     }
 
     return res.status(200).json({ reply });
 
   } catch (error) {
-    console.error("Chat error:", error);
+    console.error("Server error:", error);
 
     return res.status(500).json({
       error: error.message || "Internal server error"
