@@ -1,78 +1,56 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#08090c">
-  <title>MY AI</title>
+  <meta name="theme-color" content="#080808">
+  <title>MY AI — Your Personal AI</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="backdrop"></div>
-  <main id="authScreen" class="auth-layout">
-    <section class="brand-side">
-      <div class="brand-mark">✧</div>
-      <div class="brand-name">MY <span>AI</span></div>
-      <p class="tagline">Your Smart Assistant...</p>
-      <div class="features">
-        <div><b>✦</b><span>Chat<br>Smartly</span></div>
-        <div><b>▧</b><span>Generate<br>Images</span></div>
-        <div><b>◈</b><span>Explore<br>More</span></div>
-      </div>
-      <p class="quote">“Unlock the power of AI”</p>
-    </section>
+  <main class="app">
+    <aside class="sidebar">
+      <h2>MY AI</h2>
+      <button id="new-chat-btn">+ New Chat</button>
 
-    <section class="auth-card glass">
-      <div class="small-logo">✧</div>
-      <h1 id="authTitle">Welcome Back</h1>
-      <p id="authSubtitle">Sign in to continue your journey with MY AI</p>
-      <form id="authForm">
-        <label class="field"><span>✉</span><input id="email" type="email" placeholder="Email address" autocomplete="email" required></label>
-        <label class="field"><span>●</span><input id="password" type="password" placeholder="Password (at least 6 characters)" autocomplete="current-password" minlength="6" required></label>
-        <div class="auth-options"><label><input id="showPassword" type="checkbox"> Show password</label><button type="button" class="text-button" id="forgotBtn">Forgot password?</button></div>
-        <button class="primary-btn" id="authSubmit" type="submit">Sign In</button>
-      </form>
-      <p class="switch-auth"><span id="switchText">Don't have an account?</span> <button class="text-button" id="switchMode" type="button">Sign Up</button></p>
-      <p id="authMessage" class="message" role="status"></p>
-      <p class="fine-print">Your account is securely managed by Supabase.</p>
-    </section>
-  </main>
-
-  <main id="appScreen" class="app-layout hidden">
-    <aside class="sidebar glass">
-      <div class="side-brand"><div class="small-logo">✧</div><strong>MY <span>AI</span></strong><small>Your Smart Assistant...</small></div>
       <nav>
-        <button class="nav-item active" data-view="chat">▣ <span>Chat</span></button>
-        <button class="nav-item" id="imageNav">▧ <span>Generate Image</span></button>
-        <button class="nav-item" id="historyNav">◷ <span>History</span></button>
-        <button class="nav-item" id="settingsNav">⚙ <span>Settings</span></button>
-        <button class="nav-item" id="aboutNav">ⓘ <span>About</span></button>
+        <button class="nav-item active">AI Chat</button>
+        <button class="nav-item" id="image-btn">Image Generator</button>
+        <button class="nav-item" id="video-btn">Video Generator</button>
       </nav>
-      <div class="side-bottom">
-        <div class="premium"><b>♛</b><strong>MY AI</strong><small>Smarter. Faster. Simpler.</small></div>
-        <button class="nav-item" id="logoutBtn">↪ <span>Sign Out</span></button>
+
+      <div class="sidebar-bottom">
+        <span>MY AI Assistant</span>
       </div>
     </aside>
 
-    <section class="chat-panel glass">
-      <header class="chat-header">
-        <div class="header-brand"><div class="small-logo">✧</div><div><strong>MY AI</strong><small>Always here to help you</small></div></div>
-        <div class="user-status"><i></i> Online</div>
+    <section class="chat-area">
+      <header class="topbar">
+        <strong>MY AI</strong>
+        <span>Personal AI Assistant</span>
       </header>
-      <div id="chatMessages" class="messages">
-        <div class="welcome">
-          <h2>Welcome to MY AI</h2>
-          <p>Ask a question and let's get started.</p>
+
+      <div id="chat-messages" class="messages">
+        <div class="welcome" id="welcome">
+          <h1>What can I help you with?</h1>
+          <p>Ask anything. Let's get started.</p>
         </div>
       </div>
-      <form id="chatForm" class="composer">
-        <textarea id="messageInput" rows="1" placeholder="Type your message..." required></textarea>
-        <button type="submit" aria-label="Send message">➤</button>
+
+      <form id="chat-form" class="composer">
+        <textarea id="message-input"
+          placeholder="Message MY AI..."
+          rows="1"></textarea>
+        <button type="submit" id="send-btn">↑</button>
       </form>
-      <p class="disclaimer">MY AI can make mistakes. Check important information.</p>
+
+      <p class="disclaimer">
+        MY AI can make mistakes. Check important information.
+      </p>
     </section>
   </main>
+
   <script src="app.js"></script>
 </body>
 </html>
