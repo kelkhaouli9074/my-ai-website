@@ -19,6 +19,7 @@
       startup: { typeset: false }
     };
   </script>
+
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 
@@ -56,6 +57,7 @@
           <div class="brand-icon">M</div>
           <span>MY AI</span>
         </div>
+
         <div class="online-status">
           <span class="status-dot"></span>
           AI Assistant
@@ -67,10 +69,12 @@
         <div class="welcome" id="welcome">
           <div class="welcome-icon">✦</div>
           <div class="welcome-tag">YOUR PERSONAL AI</div>
+
           <h1>What can I help you with?</h1>
           <p>Ask questions, explore ideas, or learn something new.</p>
 
           <div class="suggestions">
+
             <button type="button" class="suggestion"
               data-prompt="Explain a difficult scientific concept simply.">
               <span>◈</span>
@@ -106,13 +110,37 @@
                 <small>Build and improve projects</small>
               </div>
             </button>
+
           </div>
         </div>
 
       </section>
 
       <footer class="composer-area">
+
         <form id="chat-form" class="composer">
+
+          <div id="image-preview" class="image-preview" hidden>
+            <img id="preview-img" alt="Selected image">
+            <button type="button" id="remove-image"
+              aria-label="Remove image">×</button>
+          </div>
+
+          <input
+            type="file"
+            id="image-input"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+          >
+
+          <button
+            type="button"
+            id="attach-btn"
+            class="attach-btn"
+            title="Attach image"
+            aria-label="Attach image"
+          >📎</button>
+
           <textarea
             id="message-input"
             placeholder="Message MY AI..."
@@ -123,11 +151,13 @@
           <button type="submit" id="send-btn" aria-label="Send message">
             ↑
           </button>
+
         </form>
 
         <p class="disclaimer">
           MY AI can make mistakes. Verify important information.
         </p>
+
       </footer>
 
     </main>
