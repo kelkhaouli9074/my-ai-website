@@ -4,53 +4,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080808">
-  <title>MY AI — Your Personal AI</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main class="app">
-    <aside class="sidebar">
-      <h2>MY AI</h2>
-      <button id="new-chat-btn">+ New Chat</button>
+  <meta name="theme-color" content="#080d19">
 
-      <nav>
-        <button class="nav-item active">AI Chat</button>
-        <button class="nav-item" id="image-btn">Image Generator</button>
-        <button class="nav-item" id="video-btn">Video Generator</button>
-      </nav>
+  <title>MY AI — Your personal AI</title>
+
+  <link rel="stylesheet" href="/style.css">
+
+  <!-- MathJax configuration -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: {
+        fontCache: 'global'
+      },
+      startup: {
+        typeset: false
+      }
+    };
+  </script>
+
+  <!-- MathJax library -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+
+<body>
+
+  <div class="app">
+
+    <aside class="sidebar">
+      <div class="logo">MY AI</div>
+
+      <button id="new-chat-btn" class="new-chat-btn">
+        + New Chat
+      </button>
 
       <div class="sidebar-bottom">
-        <span>MY AI Assistant</span>
+        <p>MY AI Assistant</p>
       </div>
     </aside>
 
-    <section class="chat-area">
+    <main class="main">
+
       <header class="topbar">
-        <strong>MY AI</strong>
-        <span>Personal AI Assistant</span>
+        <h2>MY AI</h2>
       </header>
 
-      <div id="chat-messages" class="messages">
+      <section id="chat-messages" class="chat-messages">
+
         <div class="welcome" id="welcome">
           <h1>What can I help you with?</h1>
           <p>Ask anything. Let's get started.</p>
         </div>
+
+      </section>
+
+      <div class="composer-container">
+        <form id="chat-form" class="composer">
+
+          <textarea
+            id="message-input"
+            placeholder="Message MY AI..."
+            rows="1"
+          ></textarea>
+
+          <button type="submit" id="send-btn">
+            ↑
+          </button>
+
+        </form>
       </div>
 
-      <form id="chat-form" class="composer">
-        <textarea id="message-input"
-          placeholder="Message MY AI..."
-          rows="1"></textarea>
-        <button type="submit" id="send-btn">↑</button>
-      </form>
+    </main>
 
-      <p class="disclaimer">
-        MY AI can make mistakes. Check important information.
-      </p>
-    </section>
-  </main>
+  </div>
 
-  <script src="app.js"></script>
+  <script src="/app.js"></script>
+
 </body>
 </html>
