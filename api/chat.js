@@ -1,7 +1,9 @@
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({
+      error: "Method not allowed"
+    });
   }
 
   try {
@@ -19,8 +21,14 @@ export default async function handler(req, res) {
       image = null
     } = req.body || {};
 
-    if (!message || !message.trim()) {
-      return res.status(400).json({ error: "Message is empty" });
+    if (
+      !message ||
+      typeof message !== "string" ||
+      !message.trim()
+    ) {
+      return res.status(400).json({
+        error: "Message is empty"
+      });
     }
 
     const previousMessages = Array.isArray(history)
@@ -36,9 +44,16 @@ export default async function handler(req, res) {
 
     const prompt = `
 You are MY AI, a helpful and friendly AI assistant.
+
 Answer clearly and naturally in the user's language.
-If an image is provided, carefully analyze it and answer
-the user's question about its contents.
+
+You can understand images.
+When the user sends an image:
+- Describe what is visible.
+- Read text when possible.
+- Explain diagrams and charts.
+- Help solve exercises shown in images.
+- If something is unclear, say so honestly.
 
 ${previousMessages}
 
@@ -46,7 +61,10 @@ User: ${message}
 `;
 
     const input = [
-      { type: "text", text: prompt }
+      {
+        type: "text",
+        text: prompt
+      }
     ];
 
     if (image) {
@@ -57,7 +75,7 @@ User: ${message}
       ];
 
       if (
-        !image.data ||
+        typeof image.data !== "string" ||
         !allowedTypes.includes(image.mimeType)
       ) {
         return res.status(400).json({
@@ -65,14 +83,11 @@ User: ${message}
         });
       }
 
-      const base64 = image.data.replace(
-        /^data:image\/(jpeg|png|webp);base64,/,
-        ""
-      );
+      const base64 = image.data;
 
       if (
-        !/^[A-Za-z0-9+/]*={0,2}$/.test(base64) ||
-        base64.length > 4000000
+        base64.length > 2500000 ||
+        !/^[A-Za-z0-9+/]+={0,2}$/.test(base64)
       ) {
         return res.status(400).json({
           error: "Image is too large or invalid"
@@ -95,8 +110,8 @@ User: ${message}
           "x-goog-api-key": apiKey
         },
         body: JSON.stringify({
-          model: "gemini-3.5-flash-lite",
-          input
+          model: "gemini-3.8-flash",
+          input: input
         })
       }
     );
@@ -105,8 +120,10 @@ User: ${message}
 
     if (!response.ok) {
       console.error("Gemini API error:", data);
+
       return res.status(response.status).json({
-        error: data.error?.message || "Gemini API request failed"
+        error: data.error?.message ||
+          "Gemini API request failed"
       });
     }
 
@@ -127,7 +144,9 @@ User: ${message}
       });
     }
 
-    return res.status(200).json({ reply });
+    return res.status(200).json({
+      reply: reply
+    });
 
   } catch (error) {
     console.error("MY AI server error:", error);
