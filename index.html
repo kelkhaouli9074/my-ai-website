@@ -14,15 +14,19 @@
 
   <link rel="stylesheet" href="/style.css">
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- MathJax configuration -->
   <script>
     window.MathJax = {
       tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']]
       },
-      startup: { typeset: false }
+      startup: {
+        typeset: false
+      }
     };
   </script>
 
@@ -34,6 +38,7 @@
 
 <div class="app">
 
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="main-sidebar">
 
     <div class="brand">
@@ -48,6 +53,7 @@
     </button>
 
     <div class="sidebar-navigation">
+
       <button class="sidebar-nav-btn" id="open-settings" type="button">
         <span>⚙</span>
         <span>Settings</span>
@@ -57,16 +63,19 @@
         <span>ⓘ</span>
         <span>About MY AI</span>
       </button>
+
     </div>
 
     <div class="sidebar-spacer"></div>
 
     <button id="personal-account" class="personal-account" type="button">
       <div class="profile-avatar">M</div>
+
       <div class="profile-info">
         <strong>Personal Account</strong>
         <span id="sidebar-account-email">Not signed in</span>
       </div>
+
       <span class="profile-arrow">›</span>
     </button>
 
@@ -74,8 +83,10 @@
 
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
+  <!-- MAIN -->
   <main class="main">
 
+    <!-- TOPBAR -->
     <header class="topbar">
 
       <button id="open-sidebar" class="menu-toggle" type="button">☰</button>
@@ -91,6 +102,7 @@
       </div>
 
       <div class="account-area">
+
         <span id="account-email"></span>
         <span id="credits-display">Credits: --</span>
 
@@ -101,19 +113,26 @@
         <button id="google-logout" class="logout-btn" type="button" hidden>
           Sign out
         </button>
+
       </div>
 
     </header>
 
+    <!-- CHAT MESSAGES -->
     <section class="chat-messages" id="chat-messages">
+
       <div class="welcome" id="welcome">
+
         <div class="welcome-orb">
           <div class="orb-core">M</div>
         </div>
 
         <div class="welcome-tag">YOUR PERSONAL AI</div>
 
-        <h1>Think beyond<br><span>the ordinary.</span></h1>
+        <h1>
+          Think beyond<br>
+          <span>the ordinary.</span>
+        </h1>
 
         <p>
           Ask questions, explore ideas, create something new
@@ -124,57 +143,75 @@
 
           <button class="suggestion" type="button"
             data-prompt="Explain a difficult scientific concept simply.">
+
             <span class="suggestion-icon">◈</span>
+
             <span class="suggestion-copy">
               <strong>Learn something</strong>
               <small>Understand difficult concepts</small>
             </span>
+
             <span class="suggestion-arrow">↗</span>
           </button>
 
           <button class="suggestion" type="button"
             data-prompt="Help me solve a mathematics problem step by step.">
+
             <span class="suggestion-icon">∑</span>
+
             <span class="suggestion-copy">
               <strong>Mathematics</strong>
               <small>Equations and calculations</small>
             </span>
+
             <span class="suggestion-arrow">↗</span>
           </button>
 
           <button class="suggestion" type="button"
             data-prompt="Give me creative ideas for a new project.">
+
             <span class="suggestion-icon">✧</span>
+
             <span class="suggestion-copy">
               <strong>Explore ideas</strong>
               <small>Discover new possibilities</small>
             </span>
+
             <span class="suggestion-arrow">↗</span>
           </button>
 
           <button class="suggestion" type="button"
             data-prompt="Help me write and improve some code.">
+
             <span class="suggestion-icon">⌘</span>
+
             <span class="suggestion-copy">
               <strong>Write code</strong>
               <small>Build and improve projects</small>
             </span>
+
             <span class="suggestion-arrow">↗</span>
           </button>
 
         </div>
       </div>
+
     </section>
 
+    <!-- COMPOSER -->
     <footer class="composer-area">
 
+      <!-- VOICE SETTINGS -->
       <div class="voice-settings-wrap">
 
-        <button id="voice-settings-toggle"
+        <button
+          id="voice-settings-toggle"
           class="voice-settings-toggle"
           type="button"
           aria-expanded="false">
+
           ⚙ Voice settings
+
         </button>
 
         <div id="voice-settings-panel" class="voice-panel" hidden>
@@ -187,7 +224,9 @@
           <div class="voice-fields">
 
             <div class="voice-field">
+
               <label for="voice-language">Language</label>
+
               <select id="voice-language">
                 <option value="auto">Automatic</option>
                 <option value="darija">Moroccan Darija</option>
@@ -196,13 +235,17 @@
                 <option value="fr">French</option>
                 <option value="es">Spanish</option>
               </select>
+
             </div>
 
             <div class="voice-field">
+
               <label for="voice-choice">Voice</label>
+
               <select id="voice-choice">
                 <option value="default">Automatic</option>
               </select>
+
             </div>
 
           </div>
@@ -217,11 +260,23 @@
 
       <div id="voice-status" class="voice-status"></div>
 
-      <form id="chat-form" class="composer">
+      <!-- CHAT FORM -->
+      <form
+        id="chat-form"
+        class="composer"
+        onsubmit="event.preventDefault();">
 
         <div id="image-preview" class="image-preview" hidden>
+
           <img id="preview-img" alt="Image preview">
-          <button id="remove-image" type="button" aria-label="Remove image">×</button>
+
+          <button
+            id="remove-image"
+            type="button"
+            aria-label="Remove image">
+            ×
+          </button>
+
         </div>
 
         <input
@@ -231,8 +286,13 @@
           hidden
         >
 
-        <button id="attach-btn" class="composer-tool"
-          type="button" title="Attach image">＋</button>
+        <button
+          id="attach-btn"
+          class="composer-tool"
+          type="button"
+          title="Attach image">
+          ＋
+        </button>
 
         <textarea
           id="message-input"
@@ -240,16 +300,35 @@
           rows="1"
         ></textarea>
 
-        <button id="voice-input-btn" class="composer-tool"
-          type="button" title="Speak">🎙</button>
+        <button
+          id="voice-input-btn"
+          class="composer-tool"
+          type="button"
+          title="Speak">
+          🎙
+        </button>
 
-        <button id="voice-output-btn" class="composer-tool"
-          type="button">🔊 Voice off</button>
+        <button
+          id="voice-output-btn"
+          class="composer-tool"
+          type="button">
+          🔊 Voice off
+        </button>
 
-        <button id="stop-voice-btn" class="composer-tool"
-          type="button" hidden>■</button>
+        <button
+          id="stop-voice-btn"
+          class="composer-tool"
+          type="button"
+          hidden>
+          ■
+        </button>
 
-        <button id="send-btn" type="submit" title="Send message">➤</button>
+        <button
+          id="send-btn"
+          type="submit"
+          title="Send message">
+          ➤
+        </button>
 
       </form>
 
@@ -263,15 +342,31 @@
 
 </div>
 
+<!-- ABOUT MODAL -->
 <div id="about-modal" class="custom-modal" hidden>
+
   <div class="modal-card">
-    <button id="close-about" class="modal-close" type="button">×</button>
+
+    <button
+      id="close-about"
+      class="modal-close"
+      type="button">
+      ×
+    </button>
+
     <div class="modal-logo">M</div>
+
     <h2>About MY AI</h2>
+
     <p>Your personal intelligent assistant.</p>
     <p>Designed to help you learn, create and explore.</p>
-    <span class="modal-version">MY AI · Personal Assistant</span>
+
+    <span class="modal-version">
+      MY AI · Personal Assistant
+    </span>
+
   </div>
+
 </div>
 
 </body>
