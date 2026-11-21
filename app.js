@@ -1,10 +1,23 @@
+JavaScript
+
+"use strict";
 
 // =====================================
-// MY AI — SUPABASE CONFIGURATION
+// MY AI — CONFIGURATION
 // =====================================
 
 const SUPABASE_URL = "https://qxmmrlbhgmuhpityezvh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_a2bgpHM81IQK21ewBAtJsQ_gk2Y6uMK";
+
+const $ = id => document.getElementById(id);
+
+function required(id) {
+  const element = $(id);
+  if (!element) {
+    console.error(`MY AI: Missing HTML element #${id}`);
+  }
+  return element;
+}
 
 if (!window.supabase) {
   alert("Supabase could not load. Please refresh the page.");
@@ -16,54 +29,70 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-
 // =====================================
 // DOM ELEMENTS
 // =====================================
 
-const $ = id => document.getElementById(id);
+const form = required("chat-form");
+const input = required("message-input");
+const messages = required("chat-messages");
+const sendBtn = required("send-btn");
+const newChatBtn = required("new-chat-btn");
 
-const form = $("chat-form");
-const input = $("message-input");
-const messages = $("chat-messages");
-const sendBtn = $("send-btn");
-const newChatBtn = $("new-chat-btn");
+const imageInput = required("image-input");
+const attachBtn = required("attach-btn");
+const preview = required("image-preview");
+const previewImg = required("preview-img");
+const removeImageBtn = required("remove-image");
 
-const imageInput = $("image-input");
-const attachBtn = $("attach-btn");
-const preview = $("image-preview");
-const previewImg = $("preview-img");
-const removeImageBtn = $("remove-image");
+const loginButton = required("google-login");
+const logoutButton = required("google-logout");
+const creditsDisplay = required("credits-display");
+const accountEmail = required("account-email");
 
-const loginButton = $("google-login");
-const logoutButton = $("google-logout");
-const creditsDisplay = $("credits-display");
-const accountEmail = $("account-email");
+const sidebar = required("main-sidebar");
+const sidebarOverlay = required("sidebar-overlay");
+const openSidebarBtn = required("open-sidebar");
+const closeSidebarBtn = required("close-sidebar");
+const sidebarAccountEmail = required("sidebar-account-email");
 
-const sidebar = $("main-sidebar");
-const sidebarOverlay = $("sidebar-overlay");
-const openSidebarBtn = $("open-sidebar");
-const closeSidebarBtn = $("close-sidebar");
-const sidebarAccountEmail = $("sidebar-account-email");
+const settingsBtn = required("open-settings");
+const aboutBtn = required("open-about");
+const aboutModal = required("about-modal");
+const closeAboutBtn = required("close-about");
+const personalAccountBtn = required("personal-account");
 
-const settingsBtn = $("open-settings");
-const aboutBtn = $("open-about");
-const aboutModal = $("about-modal");
-const closeAboutBtn = $("close-about");
-const personalAccountBtn = $("personal-account");
+const voiceInputBtn = required("voice-input-btn");
+const voiceOutputBtn = required("voice-output-btn");
+const stopVoiceBtn = required("stop-voice-btn");
+const voiceStatus = required("voice-status");
 
-const voiceInputBtn = $("voice-input-btn");
-const voiceOutputBtn = $("voice-output-btn");
-const stopVoiceBtn = $("stop-voice-btn");
-const voiceStatus = $("voice-status");
+const languageSelect = required("voice-language");
+const voiceSelect = required("voice-choice");
+const previewVoiceBtn = required("preview-voice-btn");
 
-const languageSelect = $("voice-language");
-const voiceSelect = $("voice-choice");
-const previewVoiceBtn = $("preview-voice-btn");
+const voiceSettingsToggle = required("voice-settings-toggle");
+const voiceSettingsPanel = required("voice-settings-panel");
 
-const voiceSettingsToggle = $("voice-settings-toggle");
-const voiceSettingsPanel = $("voice-settings-panel");
+const elements = [
+  form, input, messages, sendBtn, newChatBtn,
+  imageInput, attachBtn, preview, previewImg,
+  removeImageBtn, loginButton, logoutButton,
+  creditsDisplay, accountEmail, sidebar,
+  sidebarOverlay, openSidebarBtn, closeSidebarBtn,
+  sidebarAccountEmail, settingsBtn, aboutBtn,
+  aboutModal, closeAboutBtn, personalAccountBtn,
+  voiceInputBtn, voiceOutputBtn, stopVoiceBtn,
+  voiceStatus, languageSelect, voiceSelect,
+  previewVoiceBtn, voiceSettingsToggle,
+  voiceSettingsPanel
+];
 
+if (elements.some(element => !element)) {
+  console.error(
+    "MY AI: Some HTML elements are missing. Check index.html."
+  );
+}
 
 // =====================================
 // MAIN VARIABLES
@@ -78,51 +107,75 @@ let recognition = null;
 let isListening = false;
 let recognizedText = "";
 let speechError = null;
-let selectedVoice = null;
 let lastSpeechLanguage = null;
 
 let activeOwnerId = null;
 let activeConversation = null;
 let localDB = null;
-
+let isSending = false;
 
 // =====================================
-// SIDEBAR CONTROLS
+// SAFE EVENT LISTENERS
+// =====================================
+
+function on(element, event, callback) {
+  if (element) {
+    element.addEventListener(event, callback);
+  }
+}
+
+// =====================================
+// SIDEBAR
 // =====================================
 
 function openSidebar() {
+  if (!sidebar || !sidebarOverlay) return;
+
   sidebar.classList.add("sidebar-open");
   sidebarOverlay.classList.add("overlay-visible");
   document.body.style.overflow = "hidden";
 }
 
 function closeSidebar() {
+  if (!sidebar || !sidebarOverlay) return;
+
   sidebar.classList.remove("sidebar-open");
   sidebarOverlay.classList.remove("overlay-visible");
   document.body.style.overflow = "";
 }
 
-openSidebarBtn.addEventListener("click", openSidebar);
-closeSidebarBtn.addEventListener("click", closeSidebar);
-sidebarOverlay.addEventListener("click", closeSidebar);
+on(openSidebarBtn, "click", openSidebar);
+on(closeSidebarBtn, "click", closeSidebar);
+on(sidebarOverlay, "click", closeSidebar);
 
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") {
     closeSidebar();
-    aboutModal.hidden = true;
+
+    if (aboutModal) aboutModal.hidden = true;
+
+    if (voiceSettingsPanel) {
+      voiceSettingsPanel.hidden = true;
+      voiceSettingsToggle?.setAttribute("aria-expanded", "false");
+    }
   }
 });
 
 // Swipe gestures
+
 let touchStartX = 0;
 let touchStartY = 0;
 
 document.addEventListener("touchstart", event => {
+  if (!event.changedTouches.length) return;
+
   touchStartX = event.changedTouches[0].screenX;
   touchStartY = event.changedTouches[0].screenY;
 }, { passive: true });
 
 document.addEventListener("touchend", event => {
+  if (!event.changedTouches.length) return;
+
   const endX = event.changedTouches[0].screenX;
   const endY = event.changedTouches[0].screenY;
 
@@ -137,11 +190,10 @@ document.addEventListener("touchend", event => {
     openSidebar();
   }
 
-  if (dx < 0 && sidebar.classList.contains("sidebar-open")) {
+  if (dx < 0 && sidebar?.classList.contains("sidebar-open")) {
     closeSidebar();
   }
 }, { passive: true });
-
 
 // =====================================
 // LOCAL DATABASE — INDEXEDDB
@@ -155,6 +207,11 @@ function openLocalDatabase() {
   return new Promise((resolve, reject) => {
     if (localDB) {
       resolve(localDB);
+      return;
+    }
+
+    if (!window.indexedDB) {
+      reject(new Error("Local storage is not supported."));
       return;
     }
 
@@ -176,10 +233,18 @@ function openLocalDatabase() {
 
     request.onsuccess = () => {
       localDB = request.result;
+
+      localDB.onversionchange = () => {
+        localDB.close();
+        localDB = null;
+      };
+
       resolve(localDB);
     };
 
-    request.onerror = () => reject(request.error);
+    request.onerror = () => {
+      reject(request.error || new Error("Database error"));
+    };
   });
 }
 
@@ -193,6 +258,7 @@ async function saveConversation(conversation) {
 
     transaction.oncomplete = () => resolve(true);
     transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
   });
 }
 
@@ -228,7 +294,12 @@ async function getConversation(id, ownerId) {
 
     request.onsuccess = () => {
       const result = request.result;
-      resolve(result && result.ownerId === ownerId ? result : null);
+
+      resolve(
+        result && result.ownerId === ownerId
+          ? result
+          : null
+      );
     };
 
     request.onerror = () => reject(request.error);
@@ -243,10 +314,12 @@ async function removeConversation(id, ownerId) {
 
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
+
     transaction.objectStore(STORE_NAME).delete(id);
 
     transaction.oncomplete = () => resolve(true);
     transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
   });
 }
 
@@ -271,13 +344,12 @@ function createConversation(ownerId, firstMessage) {
   };
 }
 
-
 // =====================================
 // CHAT HISTORY
 // =====================================
 
 function createHistoryInterface() {
-  if ($("myai-history")) return;
+  if ($("myai-history") || !newChatBtn) return;
 
   const section = document.createElement("section");
   section.id = "myai-history";
@@ -328,7 +400,9 @@ function createHistoryInterface() {
     }
   });
 
-  $("myai-delete-all").addEventListener("click", async () => {
+  const deleteAll = $("myai-delete-all");
+
+  on(deleteAll, "click", async () => {
     if (!activeOwnerId) return;
 
     if (!confirm("Delete all your saved conversations?")) return;
@@ -399,7 +473,6 @@ async function renderConversationList() {
   }
 }
 
-
 // =====================================
 // CONVERSATION MANAGEMENT
 // =====================================
@@ -432,7 +505,7 @@ async function storeMessage(message) {
 }
 
 async function openConversation(id) {
-  if (!activeOwnerId) return;
+  if (!activeOwnerId || !messages) return;
 
   try {
     const conversation = await getConversation(id, activeOwnerId);
@@ -496,54 +569,58 @@ function startNewChat() {
   clearImage();
   showWelcome();
 
-  input.value = "";
-  input.style.height = "auto";
+  if (input) {
+    input.value = "";
+    input.style.height = "auto";
+  }
 
-  voiceSettingsPanel.hidden = true;
-  voiceSettingsToggle.setAttribute("aria-expanded", "false");
+  if (voiceSettingsPanel) {
+    voiceSettingsPanel.hidden = true;
+  }
+
+  voiceSettingsToggle?.setAttribute("aria-expanded", "false");
 
   renderConversationList();
   closeSidebar();
-  input.focus();
+  input?.focus();
 }
 
-
 // =====================================
-// SIDEBAR MENU ACTIONS
+// SIDEBAR ACTIONS
 // =====================================
 
-newChatBtn.addEventListener("click", startNewChat);
+on(newChatBtn, "click", startNewChat);
 
-settingsBtn.addEventListener("click", () => {
+on(settingsBtn, "click", () => {
   closeSidebar();
+
+  if (!voiceSettingsPanel) return;
 
   voiceSettingsPanel.hidden = false;
-  voiceSettingsToggle.setAttribute("aria-expanded", "true");
+  voiceSettingsToggle?.setAttribute("aria-expanded", "true");
 
-  setTimeout(() => {
-    voiceSettingsPanel.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-  }, 100);
+  voiceSettingsPanel.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
 });
 
-aboutBtn.addEventListener("click", () => {
+on(aboutBtn, "click", () => {
   closeSidebar();
-  aboutModal.hidden = false;
+  if (aboutModal) aboutModal.hidden = false;
 });
 
-closeAboutBtn.addEventListener("click", () => {
-  aboutModal.hidden = true;
+on(closeAboutBtn, "click", () => {
+  if (aboutModal) aboutModal.hidden = true;
 });
 
-aboutModal.addEventListener("click", event => {
+on(aboutModal, "click", event => {
   if (event.target === aboutModal) {
     aboutModal.hidden = true;
   }
 });
 
-personalAccountBtn.addEventListener("click", async () => {
+on(personalAccountBtn, "click", async () => {
   closeSidebar();
 
   if (currentSession) {
@@ -553,20 +630,19 @@ personalAccountBtn.addEventListener("click", async () => {
       ". Do you want to sign out?"
     );
 
-    if (confirmed) {
-      logoutButton.click();
-    }
+    if (confirmed) logoutButton?.click();
   } else {
-    loginButton.click();
+    loginButton?.click();
   }
 });
-
 
 // =====================================
 // VOICE SETTINGS PANEL
 // =====================================
 
-voiceSettingsToggle.addEventListener("click", () => {
+on(voiceSettingsToggle, "click", () => {
+  if (!voiceSettingsPanel) return;
+
   const isOpen = !voiceSettingsPanel.hidden;
 
   voiceSettingsPanel.hidden = isOpen;
@@ -574,6 +650,8 @@ voiceSettingsToggle.addEventListener("click", () => {
 });
 
 document.addEventListener("click", event => {
+  if (!voiceSettingsPanel || !voiceSettingsToggle) return;
+
   const clickedInside =
     voiceSettingsPanel.contains(event.target) ||
     voiceSettingsToggle.contains(event.target);
@@ -583,7 +661,6 @@ document.addEventListener("click", event => {
     voiceSettingsToggle.setAttribute("aria-expanded", "false");
   }
 });
-
 
 // =====================================
 // LANGUAGE CONFIGURATION
@@ -636,7 +713,7 @@ function getBrowserLanguage() {
 }
 
 function getCurrentLanguage() {
-  const selected = languageSelect.value;
+  const selected = languageSelect?.value || "auto";
 
   if (selected === "auto") {
     return lastSpeechLanguage || getBrowserLanguage();
@@ -654,7 +731,7 @@ function getSpeechLanguage(language) {
 }
 
 function getRecognitionLanguage() {
-  const selected = languageSelect.value;
+  const selected = languageSelect?.value || "auto";
 
   if (selected === "auto") {
     return getSpeechLanguage(getBrowserLanguage()).recognition;
@@ -687,7 +764,6 @@ function detectTextLanguage(text) {
   return "en";
 }
 
-
 // =====================================
 // ACCOUNT MANAGEMENT
 // =====================================
@@ -707,11 +783,15 @@ async function updateAccount(session = undefined) {
       activeConversation = null;
       history = [];
 
-      loginButton.hidden = false;
-      logoutButton.hidden = true;
-      accountEmail.textContent = "";
-      sidebarAccountEmail.textContent = "Not signed in";
-      creditsDisplay.textContent = "Credits: --";
+      if (loginButton) loginButton.hidden = false;
+      if (logoutButton) logoutButton.hidden = true;
+
+      if (accountEmail) accountEmail.textContent = "";
+      if (sidebarAccountEmail) {
+        sidebarAccountEmail.textContent = "Not signed in";
+      }
+
+      if (creditsDisplay) creditsDisplay.textContent = "Credits: --";
 
       showWelcome();
       await renderConversationList();
@@ -727,13 +807,18 @@ async function updateAccount(session = undefined) {
       showWelcome();
     }
 
-    loginButton.hidden = true;
-    logoutButton.hidden = false;
+    if (loginButton) loginButton.hidden = true;
+    if (logoutButton) logoutButton.hidden = false;
 
-    accountEmail.textContent = session.user.email || "Signed in";
-    sidebarAccountEmail.textContent = session.user.email || "Signed in";
+    if (accountEmail) {
+      accountEmail.textContent = session.user.email || "Signed in";
+    }
 
-    creditsDisplay.textContent = "Credits: ...";
+    if (sidebarAccountEmail) {
+      sidebarAccountEmail.textContent = session.user.email || "Signed in";
+    }
+
+    if (creditsDisplay) creditsDisplay.textContent = "Credits: ...";
 
     await renderConversationList();
 
@@ -745,24 +830,29 @@ async function updateAccount(session = undefined) {
 
     if (error) {
       console.error("Profile error:", error.message);
-      creditsDisplay.textContent = "Credits unavailable";
+      if (creditsDisplay) {
+        creditsDisplay.textContent = "Credits unavailable";
+      }
       return;
     }
 
-    creditsDisplay.textContent = "Credits: " + profile.credits;
+    if (creditsDisplay) {
+      creditsDisplay.textContent = "Credits: " + profile.credits;
+    }
 
   } catch (error) {
     console.error("Account error:", error);
-    creditsDisplay.textContent = "Credits unavailable";
+    if (creditsDisplay) {
+      creditsDisplay.textContent = "Credits unavailable";
+    }
   }
 }
-
 
 // =====================================
 // GOOGLE LOGIN
 // =====================================
 
-loginButton.addEventListener("click", async () => {
+on(loginButton, "click", async () => {
   loginButton.disabled = true;
   loginButton.textContent = "Connecting...";
 
@@ -783,12 +873,11 @@ loginButton.addEventListener("click", async () => {
   }
 });
 
-
 // =====================================
 // GOOGLE LOGOUT
 // =====================================
 
-logoutButton.addEventListener("click", async () => {
+on(logoutButton, "click", async () => {
   logoutButton.disabled = true;
 
   try {
@@ -806,7 +895,6 @@ logoutButton.addEventListener("click", async () => {
   }
 });
 
-
 // =====================================
 // AUTH STATE
 // =====================================
@@ -819,12 +907,13 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 createHistoryInterface();
 updateAccount();
 
-
 // =====================================
 // ADD MESSAGE
 // =====================================
 
 function addMessage(text, type, imageUrl = null) {
+  if (!messages) return null;
+
   const welcome = $("welcome");
   if (welcome) welcome.remove();
 
@@ -846,13 +935,12 @@ function addMessage(text, type, imageUrl = null) {
   return div;
 }
 
-
 // =====================================
 // MATHJAX
 // =====================================
 
 async function renderMath(element) {
-  if (!window.MathJax) return;
+  if (!window.MathJax || !element) return;
 
   try {
     await window.MathJax.startup.promise;
@@ -861,7 +949,6 @@ async function renderMath(element) {
     console.error("MathJax error:", error);
   }
 }
-
 
 // =====================================
 // VOICE — AVAILABLE VOICES
@@ -873,6 +960,8 @@ function getDeviceVoices() {
 }
 
 function refreshVoiceList() {
+  if (!voiceSelect) return;
+
   const voices = getDeviceVoices();
   const language = getCurrentLanguage();
   const config = getSpeechLanguage(language);
@@ -888,7 +977,6 @@ function refreshVoiceList() {
     option.value = "";
     option.textContent = "No voices found on this device";
     voiceSelect.appendChild(option);
-    selectedVoice = null;
     return;
   }
 
@@ -902,42 +990,34 @@ function refreshVoiceList() {
 
   voiceSelect.appendChild(automaticOption);
 
-  available.forEach((voice, index) => {
+  available.forEach(voice => {
     const option = document.createElement("option");
-    option.value = String(index);
+
+    // Keep the real voice object index.
+    option.value = String(voices.indexOf(voice));
     option.textContent = voice.name + " (" + voice.lang + ")";
+
     voiceSelect.appendChild(option);
   });
-
-  selectedVoice = null;
 }
 
 function getSelectedDeviceVoice() {
-  const value = voiceSelect.value;
+  const value = voiceSelect?.value;
 
   if (!value || value === "default") return null;
 
   const voices = getDeviceVoices();
-  const config = getSpeechLanguage(getCurrentLanguage());
-
-  const matching = voices.filter(voice =>
-    voice.lang.toLowerCase().startsWith(config.fallback.toLowerCase())
-  );
-
-  const available = matching.length ? matching : voices;
-
-  return available[Number(value)] || null;
+  return voices[Number(value)] || null;
 }
 
 if ("speechSynthesis" in window) {
   window.speechSynthesis.onvoiceschanged = refreshVoiceList;
   refreshVoiceList();
   setTimeout(refreshVoiceList, 500);
-} else {
+} else if (voiceSelect) {
   voiceSelect.innerHTML = "<option>Speech not supported</option>";
-  previewVoiceBtn.disabled = true;
+  if (previewVoiceBtn) previewVoiceBtn.disabled = true;
 }
-
 
 // =====================================
 // VOICE — TEXT TO SPEECH
@@ -957,7 +1037,9 @@ function cleanTextForSpeech(text) {
 
 function speakText(text, languageOverride = null) {
   if (!("speechSynthesis" in window)) {
-    voiceStatus.textContent = "Voice playback is not supported.";
+    if (voiceStatus) {
+      voiceStatus.textContent = "Voice playback is not supported.";
+    }
     return;
   }
 
@@ -968,6 +1050,7 @@ function speakText(text, languageOverride = null) {
 
   const language = languageOverride || getCurrentLanguage();
   const config = getSpeechLanguage(language);
+
   const utterance = new SpeechSynthesisUtterance(cleanText);
 
   utterance.lang = config.speech;
@@ -983,19 +1066,21 @@ function speakText(text, languageOverride = null) {
   }
 
   utterance.onstart = () => {
-    voiceStatus.textContent = "MY AI is speaking...";
-    stopVoiceBtn.hidden = false;
+    if (voiceStatus) voiceStatus.textContent = "MY AI is speaking...";
+    if (stopVoiceBtn) stopVoiceBtn.hidden = false;
   };
 
   utterance.onend = () => {
-    voiceStatus.textContent = "";
-    stopVoiceBtn.hidden = true;
+    if (voiceStatus) voiceStatus.textContent = "";
+    if (stopVoiceBtn) stopVoiceBtn.hidden = true;
   };
 
   utterance.onerror = event => {
     console.error("Speech error:", event.error);
-    voiceStatus.textContent = "Voice playback unavailable.";
-    stopVoiceBtn.hidden = true;
+    if (voiceStatus) {
+      voiceStatus.textContent = "Voice playback unavailable.";
+    }
+    if (stopVoiceBtn) stopVoiceBtn.hidden = true;
   };
 
   window.speechSynthesis.speak(utterance);
@@ -1006,42 +1091,47 @@ function stopSpeaking() {
     window.speechSynthesis.cancel();
   }
 
-  stopVoiceBtn.hidden = true;
+  if (stopVoiceBtn) stopVoiceBtn.hidden = true;
 }
-
 
 // =====================================
 // VOICE PREVIEW
 // =====================================
 
-previewVoiceBtn.addEventListener("click", () => {
+on(previewVoiceBtn, "click", () => {
   const language = getCurrentLanguage();
-  const sampleKey = language === "darija" ? "darija" : language;
-  const sample = LANGUAGE_SAMPLES[sampleKey] || LANGUAGE_SAMPLES.en;
+  const sample = LANGUAGE_SAMPLES[language] || LANGUAGE_SAMPLES.en;
 
   speakText(sample, language);
 });
-
 
 // =====================================
 // LANGUAGE SETTINGS
 // =====================================
 
-const savedLanguage = localStorage.getItem("myai_voice_language");
+try {
+  const savedLanguage = localStorage.getItem("myai_voice_language");
 
-if (
-  (savedLanguage && LANGUAGE_CONFIG[savedLanguage]) ||
-  savedLanguage === "auto"
-) {
-  languageSelect.value = savedLanguage;
+  if (
+    (savedLanguage && LANGUAGE_CONFIG[savedLanguage]) ||
+    savedLanguage === "auto"
+  ) {
+    languageSelect.value = savedLanguage;
+  }
+} catch (error) {
+  console.warn("Could not read saved language preference.");
 }
 
-languageSelect.addEventListener("change", () => {
+on(languageSelect, "change", () => {
   if (isListening && recognition) recognition.stop();
 
   stopSpeaking();
 
-  localStorage.setItem("myai_voice_language", languageSelect.value);
+  try {
+    localStorage.setItem("myai_voice_language", languageSelect.value);
+  } catch (error) {
+    console.warn("Could not save language preference.");
+  }
 
   if (languageSelect.value !== "auto") {
     lastSpeechLanguage = languageSelect.value;
@@ -1053,13 +1143,8 @@ languageSelect.addEventListener("change", () => {
     recognition.lang = getRecognitionLanguage();
   }
 
-  voiceStatus.textContent = "Language updated.";
+  if (voiceStatus) voiceStatus.textContent = "Language updated.";
 });
-
-voiceSelect.addEventListener("change", () => {
-  selectedVoice = getSelectedDeviceVoice();
-});
-
 
 // =====================================
 // VOICE — SPEECH TO TEXT
@@ -1082,10 +1167,14 @@ if (SpeechRecognition) {
     recognizedText = "";
     speechError = null;
 
-    voiceInputBtn.classList.add("listening");
-    voiceInputBtn.textContent = "●";
-    voiceInputBtn.title = "Listening...";
-    voiceStatus.textContent = "Speak now...";
+    voiceInputBtn?.classList.add("listening");
+
+    if (voiceInputBtn) {
+      voiceInputBtn.textContent = "●";
+      voiceInputBtn.title = "Listening...";
+    }
+
+    if (voiceStatus) voiceStatus.textContent = "Speak now...";
   };
 
   recognition.onresult = event => {
@@ -1106,7 +1195,7 @@ if (SpeechRecognition) {
       recognizedText += " " + finalTranscript.trim();
     }
 
-    if (interimTranscript) {
+    if (interimTranscript && voiceStatus) {
       voiceStatus.textContent = "Hearing: " + interimTranscript;
     }
   };
@@ -1114,6 +1203,8 @@ if (SpeechRecognition) {
   recognition.onerror = event => {
     speechError = event.error;
     console.error("Recognition error:", event.error);
+
+    if (!voiceStatus) return;
 
     if (event.error === "not-allowed") {
       voiceStatus.textContent = "Please allow microphone access.";
@@ -1127,9 +1218,12 @@ if (SpeechRecognition) {
   recognition.onend = () => {
     isListening = false;
 
-    voiceInputBtn.classList.remove("listening");
-    voiceInputBtn.textContent = "🎙";
-    voiceInputBtn.title = "Speak";
+    voiceInputBtn?.classList.remove("listening");
+
+    if (voiceInputBtn) {
+      voiceInputBtn.textContent = "🎙";
+      voiceInputBtn.title = "Speak";
+    }
 
     const spokenText = recognizedText.trim();
 
@@ -1142,12 +1236,16 @@ if (SpeechRecognition) {
 
       input.value = (input.value + " " + spokenText).trim();
       input.style.height = "auto";
-      input.style.height = Math.min(input.scrollHeight,150) + "px";
+      input.style.height =
+        Math.min(input.scrollHeight, 150) + "px";
 
-      voiceStatus.textContent = "Sending your message...";
+      if (voiceStatus) {
+        voiceStatus.textContent = "Sending your message...";
+      }
+
       sendMessage({ speakReply: true });
 
-    } else if (!speechError) {
+    } else if (!speechError && voiceStatus) {
       voiceStatus.textContent = "";
     }
 
@@ -1155,18 +1253,22 @@ if (SpeechRecognition) {
   };
 
 } else {
-  voiceInputBtn.disabled = true;
-  voiceInputBtn.title = "Speech recognition is not supported.";
-  voiceStatus.textContent =
-    "Voice input is not supported in this browser.";
-}
+  if (voiceInputBtn) {
+    voiceInputBtn.disabled = true;
+    voiceInputBtn.title = "Speech recognition is not supported.";
+  }
 
+  if (voiceStatus) {
+    voiceStatus.textContent =
+      "Voice input is not supported in this browser.";
+  }
+}
 
 // =====================================
 // VOICE BUTTONS
 // =====================================
 
-voiceInputBtn.addEventListener("click", () => {
+on(voiceInputBtn, "click", () => {
   if (!recognition) {
     alert("Voice recognition is not supported. Try Chrome.");
     return;
@@ -1187,25 +1289,28 @@ voiceInputBtn.addEventListener("click", () => {
     recognition.start();
   } catch (error) {
     console.error(error);
-    voiceStatus.textContent = "Could not start microphone. Try again.";
+    if (voiceStatus) {
+      voiceStatus.textContent = "Could not start microphone. Try again.";
+    }
   }
 });
 
-voiceOutputBtn.addEventListener("click", () => {
+on(voiceOutputBtn, "click", () => {
   autoSpeak = !autoSpeak;
 
-  voiceOutputBtn.classList.toggle("active",autoSpeak);
+  voiceOutputBtn.classList.toggle("active", autoSpeak);
   voiceOutputBtn.textContent = autoSpeak
     ? "🔊 Voice on"
     : "🔊 Voice off";
 
-  voiceStatus.textContent = autoSpeak
-    ? "Automatic voice playback enabled."
-    : "Automatic voice playback disabled.";
+  if (voiceStatus) {
+    voiceStatus.textContent = autoSpeak
+      ? "Automatic voice playback enabled."
+      : "Automatic voice playback disabled.";
+  }
 });
 
-stopVoiceBtn.addEventListener("click", stopSpeaking);
-
+on(stopVoiceBtn, "click", stopSpeaking);
 
 // =====================================
 // IMAGE MANAGEMENT
@@ -1213,13 +1318,14 @@ stopVoiceBtn.addEventListener("click", stopSpeaking);
 
 function clearImage() {
   selectedImage = null;
-  imageInput.value = "";
-  preview.hidden = true;
-  previewImg.removeAttribute("src");
+
+  if (imageInput) imageInput.value = "";
+  if (preview) preview.hidden = true;
+  if (previewImg) previewImg.removeAttribute("src");
 }
 
 function compressImage(file) {
-  return new Promise((resolve,reject) => {
+  return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
     const img = new Image();
 
@@ -1228,10 +1334,11 @@ function compressImage(file) {
 
       const scale = Math.min(
         1,
-        maxSide / Math.max(img.width,img.height)
+        maxSide / Math.max(img.width, img.height)
       );
 
       const canvas = document.createElement("canvas");
+
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
 
@@ -1243,10 +1350,10 @@ function compressImage(file) {
         return;
       }
 
-      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(objectUrl);
 
-      const dataUrl = canvas.toDataURL("image/jpeg",0.75);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
 
       resolve({
         data: dataUrl.split(",")[1],
@@ -1264,17 +1371,16 @@ function compressImage(file) {
   });
 }
 
-
 // =====================================
 // SELECT IMAGE
 // =====================================
 
-attachBtn.addEventListener("click", () => {
-  imageInput.click();
+on(attachBtn, "click", () => {
+  imageInput?.click();
 });
 
-imageInput.addEventListener("change", async () => {
-  const file = imageInput.files[0];
+on(imageInput, "change", async () => {
+  const file = imageInput.files?.[0];
   if (!file) return;
 
   const allowedTypes = [
@@ -1304,6 +1410,7 @@ imageInput.addEventListener("change", async () => {
     preview.hidden = false;
 
   } catch (error) {
+    console.error(error);
     alert("Could not load this image.");
     clearImage();
 
@@ -1312,46 +1419,53 @@ imageInput.addEventListener("change", async () => {
   }
 });
 
-removeImageBtn.addEventListener("click",clearImage);
-
+on(removeImageBtn, "click", clearImage);
 
 // =====================================
-// SEND MESSAGE + AUTO SAVE
+// SEND MESSAGE
 // =====================================
 
 async function sendMessage({ speakReply = false } = {}) {
+  if (isSending) return;
+
   const text = input.value.trim();
 
-  if ((!text && !selectedImage) || sendBtn.disabled) return;
+  if ((!text && !selectedImage) || !sendBtn) return;
 
-  const { data: sessionData, error: sessionError } =
-    await supabaseClient.auth.getSession();
+  isSending = true;
 
-  if (sessionError || !sessionData.session) {
-    addMessage(
-      "Please sign in with Google before using MY AI.",
-      "assistant"
-    );
-
-    loginButton.hidden = false;
-    return;
-  }
-
-  const session = sessionData.session;
-  const messageText = text || "Please analyze this image.";
   const imageToSend = selectedImage;
-
-  input.disabled = true;
-  sendBtn.disabled = true;
-  attachBtn.disabled = true;
-  voiceInputBtn.disabled = true;
+  const messageText = text || "Please analyze this image.";
 
   let loading = null;
+  let userMessage = null;
 
   try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (!sessionData.session) {
+      addMessage(
+        "Please sign in with Google before using MY AI.",
+        "assistant"
+      );
+
+      if (loginButton) loginButton.hidden = false;
+      return;
+    }
+
+    const session = sessionData.session;
+
+    input.disabled = true;
+    sendBtn.disabled = true;
+    attachBtn.disabled = true;
+    voiceInputBtn.disabled = true;
+
     await ensureActiveConversation(messageText);
 
-    const userMessage = {
+    userMessage = {
       role: "user",
       content: messageText,
       imagePreview: imageToSend ? imageToSend.preview : null,
@@ -1371,7 +1485,7 @@ async function sendMessage({ speakReply = false } = {}) {
     input.style.height = "auto";
     clearImage();
 
-    loading = addMessage("Thinking...","assistant");
+    loading = addMessage("Thinking...", "assistant");
 
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -1391,7 +1505,13 @@ async function sendMessage({ speakReply = false } = {}) {
       })
     });
 
-    const data = await response.json();
+    let data;
+
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Invalid server response.");
+    }
 
     if (!response.ok) {
       throw new Error(data.error || "Server error");
@@ -1431,16 +1551,16 @@ async function sendMessage({ speakReply = false } = {}) {
         language = lastSpeechLanguage || detectTextLanguage(data.reply);
       }
 
-      speakText(data.reply,language);
+      speakText(data.reply, language);
     }
 
   } catch (error) {
-    console.error("Chat error:",error);
+    console.error("Chat error:", error);
 
     if (loading) {
       loading.textContent = "Connection error: " + error.message;
     } else {
-      addMessage("Connection error: " + error.message,"assistant");
+      addMessage("Connection error: " + error.message, "assistant");
     }
 
     if (activeConversation) {
@@ -1450,49 +1570,54 @@ async function sendMessage({ speakReply = false } = {}) {
         await saveConversation(activeConversation);
         await renderConversationList();
       } catch (saveError) {
-        console.error("Could not save conversation:",saveError);
+        console.error("Could not save conversation:", saveError);
       }
     }
 
   } finally {
-    input.disabled = false;
-    sendBtn.disabled = false;
-    attachBtn.disabled = false;
-    voiceInputBtn.disabled = !recognition;
+    isSending = false;
 
-    input.focus();
-    messages.scrollTop = messages.scrollHeight;
+    if (input) input.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
+    if (attachBtn) attachBtn.disabled = false;
+    if (voiceInputBtn) voiceInputBtn.disabled = !recognition;
+
+    input?.focus();
+
+    if (messages) {
+      messages.scrollTop = messages.scrollHeight;
+    }
   }
 }
 
-form.addEventListener("submit",event => {
+on(form, "submit", event => {
   event.preventDefault();
   sendMessage();
 });
-
 
 // =====================================
 // TEXTAREA SIZE
 // =====================================
 
-input.addEventListener("input",() => {
+on(input, "input", () => {
   input.style.height = "auto";
-  input.style.height = Math.min(input.scrollHeight,150) + "px";
+  input.style.height = Math.min(input.scrollHeight, 150) + "px";
 });
 
-input.addEventListener("keydown",event => {
+on(input, "keydown", event => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
-    form.requestSubmit();
+    form?.requestSubmit();
   }
 });
-
 
 // =====================================
 // WELCOME SCREEN
 // =====================================
 
 function showWelcome() {
+  if (!messages) return;
+
   messages.innerHTML = `
     <div class="welcome" id="welcome">
 
@@ -1501,9 +1626,7 @@ function showWelcome() {
       </div>
 
       <div class="welcome-tag">
-        <span class="tag-line"></span>
         YOUR PERSONAL AI
-        <span class="tag-line"></span>
       </div>
 
       <h1>Think beyond<br><span>the ordinary.</span></h1>
@@ -1560,12 +1683,11 @@ function showWelcome() {
   `;
 }
 
-
 // =====================================
 // SUGGESTIONS
 // =====================================
 
-messages.addEventListener("click",event => {
+on(messages, "click", event => {
   const suggestion = event.target.closest(".suggestion");
   if (!suggestion) return;
 
@@ -1573,9 +1695,9 @@ messages.addEventListener("click",event => {
   input.focus();
 
   input.style.height = "auto";
-  input.style.height = Math.min(input.scrollHeight,150) + "px";
+  input.style.height =
+    Math.min(input.scrollHeight, 150) + "px";
 });
-
 
 // =====================================
 // SIDEBAR ACCOUNT DISPLAY
@@ -1589,18 +1711,31 @@ async function updateSidebarAccount() {
 
     const session = data.session;
 
-    sidebarAccountEmail.textContent = session
-      ? (session.user.email || "Signed in")
-      : "Not signed in";
+    if (sidebarAccountEmail) {
+      sidebarAccountEmail.textContent = session
+        ? (session.user.email || "Signed in")
+        : "Not signed in";
+    }
 
   } catch (error) {
-    console.error("Sidebar account error:",error);
-    sidebarAccountEmail.textContent = "Account unavailable";
+    console.error("Sidebar account error:", error);
+
+    if (sidebarAccountEmail) {
+      sidebarAccountEmail.textContent = "Account unavailable";
+    }
   }
 }
 
 supabaseClient.auth.onAuthStateChange(() => {
-  setTimeout(updateSidebarAccount,0);
+  setTimeout(updateSidebarAccount, 0);
 });
 
 updateSidebarAccount();
+
+// =====================================
+// INITIALIZATION
+// =====================================
+
+showWelcome();
+
+console.log("MY AI initialized successfully.");
