@@ -21,6 +21,79 @@
   </script>
 
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    .account-area {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-left: auto;
+      font-size: 12px;
+    }
+
+    #credits-display {
+      color: #a5c8ff;
+      background: #14243a;
+      border: 1px solid #263d5c;
+      padding: 8px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    #google-login,
+    #google-logout {
+      background: #202b3c;
+      color: #fff;
+      border: 1px solid #35445b;
+      border-radius: 9px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    #google-login:hover,
+    #google-logout:hover {
+      background: #2b3b52;
+    }
+
+    #google-login:disabled,
+    #google-logout:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    #account-email {
+      color: #aab5c7;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #google-login[hidden],
+    #google-logout[hidden] {
+      display: none;
+    }
+
+    @media(max-width: 600px) {
+      .topbar {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .account-area {
+        width: 100%;
+        justify-content: flex-start;
+        margin-left: 0;
+      }
+
+      #account-email {
+        display: none;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -64,6 +137,20 @@
         <div class="online-status">
           <span class="status-dot"></span>
           AI Assistant
+        </div>
+
+        <div class="account-area">
+          <span id="credits-display">Credits: --</span>
+
+          <button id="google-login" type="button">
+            Sign in with Google
+          </button>
+
+          <button id="google-logout" type="button" hidden>
+            Sign out
+          </button>
+
+          <span id="account-email"></span>
         </div>
 
       </header>
@@ -179,6 +266,7 @@
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/app.js"></script>
 
 </body>
