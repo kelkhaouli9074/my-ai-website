@@ -4,11 +4,12 @@ JavaScript
 
 /* =========================================
    MY AI — COMPLETE APP.JS
-   Fixed form refresh + protected events
+   Fixed Send Button + Form + Enter
 ========================================= */
 
 (() => {
   function initializeMYAI() {
+
     // =====================================
     // CONFIGURATION
     // =====================================
@@ -1602,22 +1603,27 @@ JavaScript
     }
 
     // =====================================
-    // PREVENT FORM REFRESH
+    // SEND BUTTON + FORM — FIXED
     // =====================================
 
-    document.addEventListener("submit", event => {
-      if (event.target?.id !== "chat-form") return;
-
+    // Direct click handler for Send button
+    sendBtn.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
-      event.stopImmediatePropagation();
 
-      sendMessage();
-    }, true);
+      if (!isSending) {
+        sendMessage();
+      }
+    });
 
+    // Form submission fallback
     form.addEventListener("submit", event => {
       event.preventDefault();
       event.stopPropagation();
+
+      if (!isSending) {
+        sendMessage();
+      }
     });
 
     // =====================================
@@ -1629,13 +1635,12 @@ JavaScript
       input.style.height = Math.min(input.scrollHeight, 150) + "px";
     });
 
+    // Enter sends; Shift + Enter creates a new line
     on(input, "keydown", event => {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
 
-        if (typeof form.requestSubmit === "function") {
-          form.requestSubmit();
-        } else {
+        if (!isSending) {
           sendMessage();
         }
       }
