@@ -5,20 +5,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1017">
-
   <title>MY AI — Intelligent Assistant</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/style.css">
 
-  <!-- MathJax -->
   <script>
     window.MathJax = {
       tex: {
         inlineMath: [['\\(', '\\)'], ['$', '$']],
         displayMath: [['\\[', '\\]'], ['$$', '$$']]
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
       }
     };
   </script>
@@ -26,12 +25,9 @@
 </head>
 
 <body>
-
 <div class="app">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="main-sidebar">
-
     <div class="brand">
       <div class="brand-icon">M</div>
       <span>MY AI</span>
@@ -43,230 +39,214 @@
       <span>New chat</span>
     </button>
 
-    <!-- Recent chats inserted by app.js -->
-
     <div class="sidebar-navigation">
-
       <button class="sidebar-nav-btn" id="open-settings" type="button">
-        <span>⚙</span>
-        <span>Settings</span>
+        <span>⚙</span><span>Settings</span>
       </button>
 
       <button class="sidebar-nav-btn" id="open-about" type="button">
-        <span>ⓘ</span>
-        <span>About Us</span>
+        <span>ⓘ</span><span>About Us</span>
       </button>
-
     </div>
 
     <div class="sidebar-spacer"></div>
 
     <button id="personal-account" class="personal-account" type="button">
       <div class="profile-avatar">M</div>
-
       <div class="profile-info">
         <strong>Personal Account</strong>
         <span id="sidebar-account-email">Not signed in</span>
       </div>
-
       <span class="profile-arrow">›</span>
     </button>
-
   </aside>
 
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-
-  <!-- MAIN CONTENT -->
   <main class="main">
 
-    <!-- TOP BAR -->
     <header class="topbar">
-
       <div class="mobile-brand">
-        <button id="open-sidebar" class="menu-toggle" type="button" aria-label="Open menu">
-          ☰
-        </button>
-
+        <button id="open-sidebar" class="menu-toggle" type="button">☰</button>
         <div class="brand-icon">M</div>
         <span>MY AI</span>
       </div>
 
       <div class="topbar-center">
-        <span>AI Workspace</span>
+        <span class="topbar-indicator"></span>
+        AI Workspace
       </div>
 
       <div class="account-area">
-
         <span id="credits-display">Credits: --</span>
-
-        <button id="google-login" type="button">
-          Sign in with Google
-        </button>
-
-        <button id="google-logout" type="button" style="display:none">
-          Logout
-        </button>
-
+        <button id="google-login" type="button">Sign in with Google</button>
+        <button id="google-logout" type="button" hidden>Logout</button>
         <span id="account-email"></span>
-
       </div>
-
     </header>
 
-
-    <!-- CHAT MESSAGES -->
     <section id="chat-messages" class="chat-messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-orb">
+          <div class="orb-core">M</div>
+        </div>
 
-      <div class="welcome-panel">
-        <div class="welcome-icon">M</div>
+        <div class="welcome-tag">
+          <span class="tag-line"></span>
+          YOUR PERSONAL AI
+          <span class="tag-line"></span>
+        </div>
 
-        <h1>Welcome to MY AI</h1>
+        <h1>Think beyond<br><span>the ordinary.</span></h1>
 
         <p>
-          Your intelligent assistant. Ask questions, explore ideas,
-          and discover new possibilities.
+          Ask questions, explore ideas, create something new
+          or learn something you have always wanted to understand.
         </p>
 
         <div class="suggestions">
-
-          <button class="suggestion-btn" type="button">
-            Explain a difficult topic
+          <button class="suggestion" type="button"
+            data-prompt="Explain a difficult scientific concept simply.">
+            <span class="suggestion-icon">◈</span>
+            <span class="suggestion-copy">
+              <strong>Learn something</strong>
+              <small>Understand difficult concepts</small>
+            </span>
+            <span class="suggestion-arrow">↗</span>
           </button>
 
-          <button class="suggestion-btn" type="button">
-            Help me with my studies
+          <button class="suggestion" type="button"
+            data-prompt="Help me solve a mathematics problem step by step.">
+            <span class="suggestion-icon">∑</span>
+            <span class="suggestion-copy">
+              <strong>Mathematics</strong>
+              <small>Equations and calculations</small>
+            </span>
+            <span class="suggestion-arrow">↗</span>
           </button>
 
-          <button class="suggestion-btn" type="button">
-            Write something for me
+          <button class="suggestion" type="button"
+            data-prompt="Give me creative ideas for a new project.">
+            <span class="suggestion-icon">✧</span>
+            <span class="suggestion-copy">
+              <strong>Explore ideas</strong>
+              <small>Discover new possibilities</small>
+            </span>
+            <span class="suggestion-arrow">↗</span>
           </button>
 
-          <button class="suggestion-btn" type="button">
-            Give me creative ideas
+          <button class="suggestion" type="button"
+            data-prompt="Help me write and improve some code.">
+            <span class="suggestion-icon">⌘</span>
+            <span class="suggestion-copy">
+              <strong>Write code</strong>
+              <small>Build and improve projects</small>
+            </span>
+            <span class="suggestion-arrow">↗</span>
           </button>
-
         </div>
       </div>
-
     </section>
 
+    <footer class="composer-area">
 
-    <!-- COMPOSER -->
-    <footer class="chat-footer">
-
-      <!-- VOICE SETTINGS -->
-      <div class="voice-settings-wrapper">
-
-        <button
-          id="voice-settings-toggle"
+      <div class="voice-settings-wrap">
+        <button id="voice-settings-toggle"
           class="voice-settings-toggle"
-          type="button">
+          type="button"
+          aria-expanded="false">
           ⚙ Voice settings
         </button>
 
-        <div id="voice-settings-panel" class="voice-settings-panel" style="display:none">
+        <div id="voice-settings-panel" class="voice-panel" hidden>
+          <div class="voice-panel-heading">
+            <div>
+              <strong>Voice Studio</strong>
+              <small>Customize your voice experience</small>
+            </div>
+            <div class="voice-panel-icon">♫</div>
+          </div>
 
-          <label for="voice-language">Language</label>
+          <div class="voice-fields">
+            <div class="voice-field">
+              <label for="voice-language">Language</label>
+              <select id="voice-language">
+                <option value="auto">Automatic</option>
+                <option value="darija">Moroccan Darija</option>
+                <option value="ar">Arabic</option>
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+              </select>
+            </div>
 
-          <select id="voice-language">
-            <option value="ar">Arabic</option>
-            <option value="darija">Moroccan Darija</option>
-            <option value="en">English</option>
-            <option value="fr">French</option>
-            <option value="es">Spanish</option>
-          </select>
+            <div class="voice-field">
+              <label for="voice-choice">Voice</label>
+              <select id="voice-choice">
+                <option value="default">Automatic voice</option>
+              </select>
+            </div>
+          </div>
 
-          <label for="voice-choice">Voice</label>
+          <div class="voice-panel-actions">
+            <button id="preview-voice-btn" class="voice-btn" type="button">Preview voice</button>
+            <button id="voice-output-btn" class="voice-btn" type="button">Voice off</button>
+            <button id="stop-voice-btn" class="voice-btn" type="button" hidden>Stop voice</button>
+          </div>
+        </div>
+      </div>
 
-          <select id="voice-choice">
-            <option value="default">Default voice</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
+      <div id="voice-status" class="voice-status" aria-live="polite"></div>
 
-          <button id="preview-voice-btn" type="button">
-            Preview voice
-          </button>
-
-          <button id="voice-output-btn" type="button">
-            Enable voice output
-          </button>
-
-          <button id="stop-voice-btn" type="button">
-            Stop voice
-          </button>
-
+      <div class="composer">
+        <div id="image-preview" class="image-preview" hidden>
+          <img id="preview-img" src="" alt="Selected image">
+          <button id="remove-image" type="button">×</button>
         </div>
 
-      </div>
+        <input id="image-input" type="file"
+          accept="image/jpeg,image/png,image/webp" hidden>
 
+        <button id="attach-btn" class="composer-tool"
+          type="button" aria-label="Attach image">＋</button>
 
-      <!-- IMAGE PREVIEW -->
-      <div id="image-preview" class="image-preview" style="display:none">
-        <img id="preview-img" src="" alt="Selected image">
-
-        <button id="remove-image" type="button" aria-label="Remove image">
-          ×
-        </button>
-      </div>
-
-
-      <!-- CHAT FORM -->
-      <form id="chat-form" class="chat-form">
-
-        <input
-          id="image-input"
-          type="file"
-          accept="image/*"
-          hidden
-        >
-
-        <button
-          id="attach-btn"
-          type="button"
-          aria-label="Attach image">
-          ＋
-        </button>
-
-        <textarea
-          id="message-input"
-          rows="1"
+        <textarea id="message-input" rows="1"
           placeholder="Message MY AI..."
-          autocomplete="off"
-        ></textarea>
+          autocomplete="off"></textarea>
 
-        <button
-          id="voice-input-btn"
-          type="button"
-          aria-label="Voice input">
-          🎙
-        </button>
+        <button id="voice-input-btn" class="composer-tool"
+          type="button" aria-label="Voice input">🎙</button>
 
-        <button
-          id="send-btn"
-          type="submit"
-          aria-label="Send message">
-          ➤
-        </button>
+        <button id="send-btn" type="submit"
+          form="chat-form" aria-label="Send message">➤</button>
+      </div>
 
-      </form>
+      <div class="composer-bottom">
+        <span>AI can make mistakes. Check important information.</span>
+        <span class="composer-brand">MY <i>AI</i></span>
+      </div>
 
-      <p class="composer-disclaimer">
-        MY AI can make mistakes. Check important information.
-      </p>
-
+      <form id="chat-form" hidden></form>
     </footer>
 
   </main>
-
 </div>
 
+<!-- ABOUT MODAL -->
+<div id="about-modal" class="custom-modal" hidden>
+  <div class="modal-card">
+    <button id="close-about" class="modal-close" type="button">×</button>
+    <div class="modal-logo">M</div>
+    <h2>About MY AI</h2>
+    <p>
+      MY AI is your intelligent assistant, designed to help you
+      learn, explore ideas and get things done.
+    </p>
+    <div class="about-version">MY AI · Intelligent Assistant</div>
+  </div>
+</div>
 
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- APP -->
 <script src="/app.js"></script>
 
 </body>
