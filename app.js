@@ -1,14 +1,12 @@
-JavaScript
 
 "use strict";
 
 /* =========================================
    MY AI — COMPLETE APP.JS
-   Stable initialization + events + chat
+   Fixed syntax + Chat + Supabase + History
 ========================================= */
 
 (() => {
-  // Visible diagnostic: confirms that this file loaded.
   console.info("MY AI: app.js loaded successfully.");
 
   function initializeMYAI() {
@@ -16,9 +14,6 @@ JavaScript
     window.__MY_AI_INITIALIZED__ = true;
 
     const $ = id => document.getElementById(id);
-    const on = (el, event, fn, options) => {
-      if (el) el.addEventListener(event, fn, options);
-    };
 
     const SUPABASE_URL =
       "https://qxmmrlbhgmuhpityezvh.supabase.co";
@@ -26,483 +21,432 @@ JavaScript
     const SUPABASE_KEY =
       "sb_publishable_a2bgpHM81IQK21ewBAtJsQ_gk2Y6uMK";
 
-    const makeId = () =>
-      window.crypto?.randomUUID?.() ||
-      "myai-" + Date.now() + "-" +
-      Math.random().toString(36).slice(2);
+    const DB_NAME = "MY_AI_LOCAL_DATABASE";
+    const DB_VERSION = 1;
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
-    // =====================================
-    // SUPABASE
-    // =====================================
+    const elements = {
+      form: $("chat-form"),
+      input: $("message-input"),
+      messages: $("chat-messages"),
+      send: $("send-btn"),
 
-    if (!window.supabase?.createClient) {
-      console.error("MY AI: Supabase SDK did not load.");
-      alert("MY AI: Supabase could not load. Refresh the page.");
-      return;
-    }
+      newChat: $("new-chat-btn"),
+      sidebar: $("main-sidebar"),
+      overlay: $("sidebar-overlay"),
+      openSidebar: $("open-sidebar"),
+      closeSidebar: $("close-sidebar"),
 
-    const supabaseClient = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
+      login: $("google-login"),
+      logout: $("google-logout"),
+      email: $("account-email"),
+      sidebarEmail: $("sidebar-account-email"),
+      credits: $("credits-display"),
 
-    // =====================================
-    // HTML ELEMENTS
-    // =====================================
+      imageInput: $("image-input"),
+      attach: $("attach-btn"),
+      imagePreview: $("image-preview"),
+      previewImg: $("preview-img"),
+      removeImage: $("remove-image"),
 
-    const form = $("chat-form");
-    const input = $("message-input");
-    const messages = $("chat-messages");
-    const sendBtn = $("send-btn");
+      voiceInput: $("voice-input-btn"),
+      voiceOutput: $("voice-output-btn"),
+      stopVoice: $("stop-voice-btn"),
 
-    const newChatBtn = $("new-chat-btn");
-    const loginBtn = $("google-login");
-    const logoutBtn = $("google-logout");
+      voiceToggle: $("voice-settings-toggle"),
+      voicePanel: $("voice-settings-panel"),
+      voiceLanguage: $("voice-language"),
+      voiceChoice: $("voice-choice"),
+      previewVoice: $("preview-voice-btn"),
+      voiceStatus: $("voice-status"),
 
-    const creditsDisplay = $("credits-display");
-    const accountEmail = $("account-email");
-    const sidebarAccountEmail = $("sidebar-account-email");
+      settings: $("open-settings"),
+      about: $("open-about"),
+      aboutModal: $("about-modal"),
+      closeAbout: $("close-about")
+    };
 
-    const sidebar = $("main-sidebar");
-    const overlay = $("sidebar-overlay");
-
-    const imageInput = $("image-input");
-    const attachBtn = $("attach-btn");
-    const imagePreview = $("image-preview");
-    const previewImg = $("preview-img");
-    const removeImageBtn = $("remove-image");
-
-    const voiceInputBtn = $("voice-input-btn");
-    const voiceOutputBtn = $("voice-output-btn");
-    const stopVoiceBtn = $("stop-voice-btn");
-    const voiceStatus = $("voice-status");
-
-    const languageSelect = $("voice-language");
-    const voiceSelect = $("voice-choice");
-    const previewVoiceBtn = $("preview-voice-btn");
-    const voiceSettingsToggle = $("voice-settings-toggle");
-    const voiceSettingsPanel = $("voice-settings-panel");
-
-    const aboutModal = $("about-modal");
-
-    const missing = [
-      ["chat-form", form],
-      ["message-input", input],
-      ["chat-messages", messages],
-      ["send-btn", sendBtn]
-    ].filter(([, element]) => !element).map(([id]) => id);
-
-    if (missing.length) {
-      console.error("MY AI: Missing HTML elements:", missing);
-      alert("MY AI: Missing HTML elements: " + missing.join(", "));
-      window.__MY_AI_INITIALIZED__ = false;
-      return;
-    }
-
-    // =====================================
-    // STATE
-    // =====================================
-
+    let supabase = null;
     let currentSession = null;
-    let activeOwnerId = null;
     let activeConversation = null;
-    let history = [];
-
-    let selectedImage = null;
+    let pendingImage = null;
     let isSending = false;
-    let autoSpeak = false;
-
     let recognition = null;
     let isListening = false;
-    let recognizedText = "";
-    let speechError = null;
-    let lastSpeechLanguage = null;
+    let autoSpeak = false;
 
-    // =====================================
-    // ERROR DISPLAY
-    // =====================================
+    let databasePromise = null;
+
+    const voiceLanguages = {
+      darija: "ar-MA",
+      arabic: "ar-SA",
+      english: "en-US",
+      french: "fr-FR",
+      spanish: "es-ES"
+    };
+
+    const getVoiceLanguage = () => {
+      const selected = elements.voiceLanguage?.value || "darija";
+      return voiceLanguages[selected] || selected;
+    };
 
     function showError(message) {
       console.error("MY AI:", message);
-      addMessage("Error: " + message, "assistant");
+      alert(message);
     }
 
-    // =====================================
-    // SIDEBAR
-    // =====================================
-
-    function openSidebar() {
-      sidebar?.classList.add("sidebar-open");
-      overlay?.classList.add("overlay-visible");
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeSidebar() {
-      sidebar?.classList.remove("sidebar-open");
-      overlay?.classList.remove("overlay-visible");
-      document.body.style.overflow = "";
-    }
-
-    on($("open-sidebar"), "click", event => {
-      event.preventDefault();
-      openSidebar();
-    });
-
-    on($("close-sidebar"), "click", event => {
-      event.preventDefault();
-      closeSidebar();
-    });
-
-    on(overlay, "click", closeSidebar);
-
-    document.addEventListener("keydown", event => {
-      if (event.key !== "Escape") return;
-
-      closeSidebar();
-
-      if (aboutModal) aboutModal.hidden = true;
-
-      if (voiceSettingsPanel) {
-        voiceSettingsPanel.hidden = true;
-        voiceSettingsToggle?.setAttribute("aria-expanded", "false");
+    function setStatus(message) {
+      if (elements.voiceStatus) {
+        elements.voiceStatus.textContent = message;
       }
-    });
+    }
 
-    // =====================================
-    // LOCAL CONVERSATION DATABASE
-    // =====================================
+    function scrollToBottom() {
+      if (!elements.messages) return;
+      elements.messages.scrollTop = elements.messages.scrollHeight;
+    }
 
-    const DB_NAME = "MY_AI_LOCAL_DATABASE";
-    const STORE_NAME = "conversations";
-    let localDB = null;
+    /* =====================================
+       SUPABASE
+    ===================================== */
+
+    function initializeSupabase() {
+      if (!window.supabase?.createClient) {
+        console.error("Supabase SDK is missing.");
+        return false;
+      }
+
+      supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+
+      return true;
+    }
+
+    async function getSession() {
+      if (!supabase) return null;
+
+      const { data, error } =
+        await supabase.auth.getSession();
+
+      if (error) {
+        console.error("Session error:", error);
+        return null;
+      }
+
+      currentSession = data.session || null;
+      return currentSession;
+    }
+
+    async function updateAccount(session) {
+      currentSession = session || null;
+
+      const loggedIn = Boolean(currentSession);
+      const email = currentSession?.user?.email || "";
+
+      if (elements.login) {
+        elements.login.hidden = loggedIn;
+      }
+
+      if (elements.logout) {
+        elements.logout.hidden = !loggedIn;
+      }
+
+      if (elements.email) {
+        elements.email.textContent =
+          loggedIn ? email : "Not signed in";
+      }
+
+      if (elements.sidebarEmail) {
+        elements.sidebarEmail.textContent =
+          loggedIn ? email : "Not signed in";
+      }
+
+      if (elements.credits) {
+        elements.credits.textContent =
+          loggedIn ? "..." : "0";
+      }
+
+      if (!loggedIn) {
+        await renderConversationList();
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("credits")
+          .eq("id", currentSession.user.id)
+          .maybeSingle();
+
+        if (!error && data && elements.credits) {
+          elements.credits.textContent = data.credits ?? "0";
+        }
+      } catch (error) {
+        console.error("Credits error:", error);
+      }
+
+      await renderConversationList();
+    }
+
+    async function loginWithGoogle() {
+      if (!supabase) {
+        showError("Supabase is not available.");
+        return;
+      }
+
+      try {
+        if (elements.login) elements.login.disabled = true;
+
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: window.location.origin
+          }
+        });
+
+        if (error) throw error;
+
+      } catch (error) {
+        showError(error.message || "Google login failed.");
+      } finally {
+        if (elements.login) elements.login.disabled = false;
+      }
+    }
+
+    async function logout() {
+      if (!supabase) return;
+
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+
+        currentSession = null;
+        activeConversation = null;
+
+        showWelcome();
+        await updateAccount(null);
+
+      } catch (error) {
+        showError(error.message || "Logout failed.");
+      }
+    }
+
+    /* =====================================
+       INDEXED DB
+    ===================================== */
 
     function openDatabase() {
-      return new Promise((resolve, reject) => {
-        if (localDB) return resolve(localDB);
+      if (databasePromise) return databasePromise;
 
+      databasePromise = new Promise((resolve, reject) => {
         if (!window.indexedDB) {
-          return reject(new Error("Browser storage is unavailable."));
+          reject(new Error("IndexedDB is not supported."));
+          return;
         }
 
-        const request = indexedDB.open(DB_NAME, 1);
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onupgradeneeded = event => {
           const db = event.target.result;
+          let store;
 
-          if (!db.objectStoreNames.contains(STORE_NAME)) {
-            const store = db.createObjectStore(STORE_NAME, {
+          if (!db.objectStoreNames.contains("conversations")) {
+            store = db.createObjectStore("conversations", {
               keyPath: "id"
             });
+          } else {
+            store = event.target.transaction.objectStore(
+              "conversations"
+            );
+          }
 
+          if (!store.indexNames.contains("ownerId")) {
             store.createIndex("ownerId", "ownerId", {
+              unique: false
+            });
+          }
+
+          if (!store.indexNames.contains("updatedAt")) {
+            store.createIndex("updatedAt", "updatedAt", {
               unique: false
             });
           }
         };
 
-        request.onsuccess = () => {
-          localDB = request.result;
-          resolve(localDB);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      return databasePromise;
+    }
+
+    async function databaseAction(mode, callback) {
+      const db = await openDatabase();
+
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+          "conversations",
+          mode
+        );
+
+        const store = transaction.objectStore("conversations");
+        let request;
+
+        try {
+          request = callback(store);
+        } catch (error) {
+          reject(error);
+          return;
+        }
+
+        transaction.oncomplete = () => {
+          resolve(request?.result);
         };
 
-        request.onerror = () => {
-          reject(request.error || new Error("Database error."));
-        };
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error);
       });
     }
 
     async function saveConversation(conversation) {
-      const db = await openDatabase();
+      if (!conversation) return;
 
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, "readwrite");
-        tx.objectStore(STORE_NAME).put(conversation);
+      conversation.updatedAt = Date.now();
 
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => reject(tx.error);
-        tx.onabort = () => reject(tx.error);
-      });
+      try {
+        await databaseAction("readwrite", store =>
+          store.put(conversation)
+        );
+      } catch (error) {
+        console.error("Save conversation error:", error);
+      }
     }
 
-    async function getConversations(ownerId) {
-      const db = await openDatabase();
+    async function getConversation(id) {
+      try {
+        const db = await openDatabase();
 
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, "readonly");
-        const request = tx.objectStore(STORE_NAME)
-          .index("ownerId")
-          .getAll(ownerId);
+        return await new Promise((resolve, reject) => {
+          const transaction = db.transaction(
+            "conversations",
+            "readonly"
+          );
 
-        request.onsuccess = () => {
-          const result = request.result || [];
-          result.sort((a, b) => b.updatedAt - a.updatedAt);
-          resolve(result);
-        };
+          const request = transaction
+            .objectStore("conversations")
+            .get(id);
 
-        request.onerror = () => reject(request.error);
-      });
+          request.onsuccess = () =>
+            resolve(request.result || null);
+
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.error("Get conversation error:", error);
+        return null;
+      }
     }
 
-    async function getConversation(id, ownerId) {
-      const db = await openDatabase();
+    async function getConversations() {
+      const ownerId = currentSession?.user?.id;
+      if (!ownerId) return [];
 
-      return new Promise((resolve, reject) => {
-        const request = db.transaction(STORE_NAME, "readonly")
-          .objectStore(STORE_NAME)
-          .get(id);
+      try {
+        const db = await openDatabase();
 
-        request.onsuccess = () => {
-          const item = request.result;
-          resolve(item?.ownerId === ownerId ? item : null);
-        };
+        return await new Promise((resolve, reject) => {
+          const transaction = db.transaction(
+            "conversations",
+            "readonly"
+          );
 
-        request.onerror = () => reject(request.error);
-      });
+          const store = transaction.objectStore("conversations");
+          const request = store.index("ownerId").getAll(ownerId);
+
+          request.onsuccess = () => {
+            const conversations = request.result || [];
+
+            conversations.sort(
+              (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)
+            );
+
+            resolve(conversations);
+          };
+
+          request.onerror = () => reject(request.error);
+        });
+
+      } catch (error) {
+        console.error("List conversations error:", error);
+        return [];
+      }
     }
 
     async function deleteConversation(id) {
-      const db = await openDatabase();
+      try {
+        await databaseAction("readwrite", store =>
+          store.delete(id)
+        );
 
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, "readwrite");
-        tx.objectStore(STORE_NAME).delete(id);
+        if (activeConversation?.id === id) {
+          activeConversation = null;
+          showWelcome();
+        }
 
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => reject(tx.error);
-      });
+        await renderConversationList();
+
+      } catch (error) {
+        console.error("Delete conversation error:", error);
+      }
     }
 
-    function createConversation(ownerId, firstMessage) {
-      const now = Date.now();
+    async function clearConversations() {
+      const conversations = await getConversations();
 
+      for (const conversation of conversations) {
+        await databaseAction("readwrite", store =>
+          store.delete(conversation.id)
+        );
+      }
+
+      activeConversation = null;
+      showWelcome();
+
+      await renderConversationList();
+    }
+
+    function createConversation() {
       return {
-        id: makeId(),
-        ownerId,
-        title: (firstMessage || "New chat").slice(0, 45),
-        createdAt: now,
-        updatedAt: now,
-        messages: []
+        id: crypto.randomUUID
+          ? crypto.randomUUID()
+          : String(Date.now()) + Math.random(),
+
+        ownerId: currentSession.user.id,
+        title: "New chat",
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
       };
     }
 
-    // =====================================
-    // MESSAGE DISPLAY
-    // =====================================
-
-    function addMessage(text, type, imageUrl = null) {
-      $("welcome")?.remove();
-
-      const div = document.createElement("div");
-      div.className = "message " + type;
-      div.textContent = text || "";
-
-      if (imageUrl) {
-        const img = document.createElement("img");
-        img.src = imageUrl;
-        img.alt = "Uploaded image";
-        img.className = "message-image";
-        div.appendChild(img);
+    async function ensureActiveConversation(message) {
+      if (!currentSession?.user) {
+        throw new Error("Please sign in first.");
       }
 
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-
-      return div;
-    }
-
-    function showWelcome() {
-      messages.innerHTML = `
-        <div class="welcome" id="welcome">
-          <div class="welcome-orb">
-            <div class="orb-core">M</div>
-          </div>
-
-          <div class="welcome-tag">YOUR PERSONAL AI</div>
-
-          <h1>Think beyond<br><span>the ordinary.</span></h1>
-
-          <p>
-            Ask questions, explore ideas, create something new
-            or learn something you have always wanted to understand.
-          </p>
-
-          <div class="suggestions">
-            <button type="button" class="suggestion"
-              data-prompt="Explain a difficult scientific concept simply.">
-              <span class="suggestion-icon">◈</span>
-              <span class="suggestion-copy">
-                <strong>Learn something</strong>
-                <small>Understand difficult concepts</small>
-              </span>
-              <span class="suggestion-arrow">↗</span>
-            </button>
-
-            <button type="button" class="suggestion"
-              data-prompt="Help me solve a mathematics problem step by step.">
-              <span class="suggestion-icon">∑</span>
-              <span class="suggestion-copy">
-                <strong>Mathematics</strong>
-                <small>Equations and calculations</small>
-              </span>
-              <span class="suggestion-arrow">↗</span>
-            </button>
-
-            <button type="button" class="suggestion"
-              data-prompt="Give me creative ideas for a new project.">
-              <span class="suggestion-icon">✧</span>
-              <span class="suggestion-copy">
-                <strong>Explore ideas</strong>
-                <small>Discover new possibilities</small>
-              </span>
-              <span class="suggestion-arrow">↗</span>
-            </button>
-
-            <button type="button" class="suggestion"
-              data-prompt="Help me write and improve some code.">
-              <span class="suggestion-icon">⌘</span>
-              <span class="suggestion-copy">
-                <strong>Write code</strong>
-                <small>Build and improve projects</small>
-              </span>
-              <span class="suggestion-arrow">↗</span>
-            </button>
-          </div>
-        </div>
-      `;
-    }
-
-    // =====================================
-    // HISTORY INTERFACE
-    // =====================================
-
-    function createHistoryInterface() {
-      if ($("myai-history") || !newChatBtn) return;
-
-      const section = document.createElement("section");
-      section.id = "myai-history";
-
-      section.innerHTML = `
-        <div class="history-heading">
-          <span>Recent chats</span>
-          <button id="myai-delete-all" type="button">Clear all</button>
-        </div>
-        <div id="myai-history-list">
-          <div class="myai-history-empty">No conversations yet</div>
-        </div>
-      `;
-
-      newChatBtn.insertAdjacentElement("afterend", section);
-
-      section.addEventListener("click", async event => {
-        const deleteBtn = event.target.closest(".myai-history-delete");
-
-        if (deleteBtn) {
-          event.stopPropagation();
-
-          if (!confirm("Delete this conversation?")) return;
-
-          try {
-            const id = deleteBtn.dataset.id;
-            await deleteConversation(id);
-
-            if (activeConversation?.id === id) startNewChat();
-
-            await renderConversationList();
-          } catch (error) {
-            alert("Could not delete conversation: " + error.message);
-          }
-
-          return;
-        }
-
-        const item = event.target.closest(".myai-history-item");
-
-        if (item) {
-          await openConversation(item.dataset.id);
-          closeSidebar();
-        }
-      });
-
-      on($("myai-delete-all"), "click", async () => {
-        if (!activeOwnerId) return;
-        if (!confirm("Delete all your saved conversations?")) return;
-
-        try {
-          const all = await getConversations(activeOwnerId);
-
-          for (const item of all) {
-            await deleteConversation(item.id);
-          }
-
-          startNewChat();
-          await renderConversationList();
-        } catch (error) {
-          alert("Could not clear history: " + error.message);
-        }
-      });
-    }
-
-    async function renderConversationList() {
-      createHistoryInterface();
-
-      const list = $("myai-history-list");
-      if (!list) return;
-
-      if (!activeOwnerId) {
-        list.innerHTML =
-          '<div class="myai-history-empty">Sign in to see your chats</div>';
-        return;
+      if (!activeConversation) {
+        activeConversation = createConversation();
       }
 
-      try {
-        const conversations = await getConversations(activeOwnerId);
-        list.innerHTML = "";
-
-        if (!conversations.length) {
-          list.innerHTML =
-            '<div class="myai-history-empty">No conversations yet</div>';
-          return;
-        }
-
-        conversations.forEach(conversation => {
-          const item = document.createElement("div");
-          item.className = "myai-history-item";
-          item.dataset.id = conversation.id;
-
-          if (activeConversation?.id === conversation.id) {
-            item.classList.add("active");
-          }
-
-          const title = document.createElement("span");
-          title.className = "myai-history-title";
-          title.textContent = "▤  " + conversation.title;
-
-          const remove = document.createElement("button");
-          remove.type = "button";
-          remove.className = "myai-history-delete";
-          remove.dataset.id = conversation.id;
-          remove.textContent = "×";
-
-          item.append(title, remove);
-          list.appendChild(item);
-        });
-      } catch (error) {
-        console.error("History error:", error);
-        list.innerHTML =
-          '<div class="myai-history-empty">Could not load conversations</div>';
+      if (
+        activeConversation.title === "New chat" &&
+        message
+      ) {
+        activeConversation.title =
+          message.trim().slice(0, 45) || "New chat";
       }
-    }
-
-    async function ensureActiveConversation(firstMessage) {
-      if (activeConversation && activeConversation.ownerId === activeOwnerId) {
-        return activeConversation;
-      }
-
-      if (!activeOwnerId) throw new Error("Please sign in first.");
-
-      activeConversation = createConversation(activeOwnerId, firstMessage);
-      await saveConversation(activeConversation);
-      await renderConversationList();
 
       return activeConversation;
     }
@@ -514,886 +458,691 @@ JavaScript
       activeConversation.updatedAt = Date.now();
 
       await saveConversation(activeConversation);
-      await renderConversationList();
+    }
+
+    /* =====================================
+       CHAT DISPLAY
+    ===================================== */
+
+    function addMessage(role, content, image = null) {
+      if (!elements.messages) return null;
+
+      $("welcome")?.remove();
+
+      const message = document.createElement("div");
+      message.className = `message ${role}-message`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "message-content";
+
+      if (image) {
+        const imageElement = document.createElement("img");
+        imageElement.src = image;
+        imageElement.alt = "Uploaded image";
+        imageElement.className = "message-image";
+        bubble.appendChild(imageElement);
+      }
+
+      const textElement = document.createElement("div");
+      textElement.className = "message-text";
+      textElement.textContent = content || "";
+
+      bubble.appendChild(textElement);
+      message.appendChild(bubble);
+      elements.messages.appendChild(message);
+
+      scrollToBottom();
+
+      return message;
+    }
+
+    function showWelcome() {
+      if (!elements.messages) return;
+
+      elements.messages.innerHTML = `
+        <div class="welcome" id="welcome">
+          <h1>How can I help you today?</h1>
+          <p>Ask anything. Let's explore together.</p>
+
+          <div class="suggestion-grid">
+            <button type="button" class="suggestion">
+              Explain a difficult topic
+            </button>
+
+            <button type="button" class="suggestion">
+              Help me write something
+            </button>
+
+            <button type="button" class="suggestion">
+              Solve a problem
+            </button>
+
+            <button type="button" class="suggestion">
+              Give me creative ideas
+            </button>
+          </div>
+        </div>
+      `;
+
+      elements.messages
+        .querySelectorAll(".suggestion")
+        .forEach(button => {
+          button.addEventListener("click", () => {
+            if (!elements.input) return;
+
+            elements.input.value = button.textContent.trim();
+            elements.input.focus();
+          });
+        });
+    }
+
+    function showThinking() {
+      removeThinking();
+
+      const thinking = document.createElement("div");
+      thinking.id = "myai-thinking";
+      thinking.className = "message assistant-message";
+
+      const bubble = document.createElement("div");
+      bubble.className = "message-content";
+      bubble.textContent = "Thinking...";
+
+      thinking.appendChild(bubble);
+      elements.messages?.appendChild(thinking);
+
+      scrollToBottom();
+    }
+
+    function removeThinking() {
+      $("myai-thinking")?.remove();
+    }
+
+    function renderMath(element) {
+      if (!window.MathJax?.typesetPromise || !element) return;
+
+      window.MathJax.typesetPromise([element]).catch(error => {
+        console.warn("MathJax error:", error);
+      });
+    }
+
+    /* =====================================
+       HISTORY
+    ===================================== */
+
+    function createHistoryInterface() {
+      if (!elements.newChat || $("myai-history")) return;
+
+      const history = document.createElement("section");
+      history.id = "myai-history";
+      history.className = "myai-history";
+
+      history.innerHTML = `
+        <div class="history-heading">
+          <span>Recent chats</span>
+          <button type="button" id="myai-delete-all">
+            Clear all
+          </button>
+        </div>
+
+        <div id="myai-history-list"></div>
+      `;
+
+      elements.newChat.insertAdjacentElement("afterend", history);
+
+      $("myai-delete-all")?.addEventListener("click", async () => {
+        if (!currentSession) {
+          showError("Please sign in first.");
+          return;
+        }
+
+        if (confirm("Delete all your conversations?")) {
+          await clearConversations();
+        }
+      });
+
+      $("myai-history-list")?.addEventListener("click", async event => {
+        const deleteButton = event.target.closest(
+          "[data-delete-chat]"
+        );
+
+        if (deleteButton) {
+          event.stopPropagation();
+
+          const id = deleteButton.dataset.deleteChat;
+
+          if (confirm("Delete this conversation?")) {
+            await deleteConversation(id);
+          }
+
+          return;
+        }
+
+        const item = event.target.closest("[data-chat-id]");
+
+        if (item) {
+          await openConversation(item.dataset.chatId);
+        }
+      });
+    }
+
+    async function renderConversationList() {
+      createHistoryInterface();
+
+      const list = $("myai-history-list");
+      if (!list) return;
+
+      if (!currentSession) {
+        list.innerHTML = "";
+        return;
+      }
+
+      const conversations = await getConversations();
+
+      list.innerHTML = "";
+
+      conversations.forEach(conversation => {
+        const item = document.createElement("div");
+        item.className = "history-item";
+        item.dataset.chatId = conversation.id;
+
+        const title = document.createElement("span");
+        title.className = "history-title";
+        title.textContent = conversation.title || "New chat";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.textContent = "×";
+        deleteButton.title = "Delete conversation";
+        deleteButton.dataset.deleteChat = conversation.id;
+
+        item.append(title, deleteButton);
+        list.appendChild(item);
+      });
     }
 
     async function openConversation(id) {
-      if (!activeOwnerId) return;
+      const conversation = await getConversation(id);
 
-      try {
-        stopSpeaking();
+      if (!conversation) return;
 
-        if (isListening && recognition) recognition.stop();
-
-        clearImage();
-
-        const conversation = await getConversation(id, activeOwnerId);
-        if (!conversation) return;
-
-        activeConversation = conversation;
-
-        history = conversation.messages
-          .filter(item => item.sentToModel)
-          .filter(item =>
-            item.role === "user" || item.role === "assistant"
-          )
-          .map(item => ({
-            role: item.role,
-            content: item.content
-          }));
-
-        messages.innerHTML = "";
-
-        if (!conversation.messages.length) {
-          showWelcome();
-        } else {
-          conversation.messages.forEach(item => {
-            const element = addMessage(
-              item.content,
-              item.role,
-              item.imagePreview || null
-            );
-
-            if (item.role === "assistant") renderMath(element);
-          });
-        }
-
-        await renderConversationList();
-      } catch (error) {
-        alert("Could not open conversation: " + error.message);
-      }
-    }
-
-    function startNewChat() {
-      history = [];
-      activeConversation = null;
-
-      stopSpeaking();
-
-      if (isListening && recognition) recognition.stop();
-
-      clearImage();
-      showWelcome();
-
-      input.value = "";
-      input.style.height = "auto";
-
-      if (voiceSettingsPanel) voiceSettingsPanel.hidden = true;
-      voiceSettingsToggle?.setAttribute("aria-expanded", "false");
-
-      renderConversationList();
-      closeSidebar();
-      input.focus();
-    }
-
-    // =====================================
-    // SIDEBAR BUTTONS
-    // =====================================
-
-    on(newChatBtn, "click", event => {
-      event.preventDefault();
-      startNewChat();
-    });
-
-    on($("open-settings"), "click", event => {
-      event.preventDefault();
-      closeSidebar();
-
-      if (!voiceSettingsPanel) return;
-
-      voiceSettingsPanel.hidden = false;
-      voiceSettingsToggle?.setAttribute("aria-expanded", "true");
-
-      voiceSettingsPanel.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-      });
-    });
-
-    on($("open-about"), "click", event => {
-      event.preventDefault();
-      closeSidebar();
-      if (aboutModal) aboutModal.hidden = false;
-    });
-
-    on($("close-about"), "click", event => {
-      event.preventDefault();
-      if (aboutModal) aboutModal.hidden = true;
-    });
-
-    on(aboutModal, "click", event => {
-      if (event.target === aboutModal) aboutModal.hidden = true;
-    });
-
-    on($("personal-account"), "click", event => {
-      event.preventDefault();
-      closeSidebar();
-
-      if (currentSession) {
-        if (confirm("Do you want to sign out?")) logoutBtn?.click();
-      } else {
-        loginBtn?.click();
-      }
-    });
-
-    // =====================================
-    // GOOGLE AUTHENTICATION
-    // =====================================
-
-    async function updateAccount(session) {
-      try {
-        if (session === undefined) {
-          const result = await supabaseClient.auth.getSession();
-          if (result.error) throw result.error;
-          session = result.data.session;
-        }
-
-        currentSession = session;
-
-        if (!session) {
-          activeOwnerId = null;
-          activeConversation = null;
-          history = [];
-
-          if (loginBtn) {
-            loginBtn.hidden = false;
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Sign in with Google";
-          }
-
-          if (logoutBtn) logoutBtn.hidden = true;
-          if (accountEmail) accountEmail.textContent = "";
-          if (sidebarAccountEmail) {
-            sidebarAccountEmail.textContent = "Not signed in";
-          }
-          if (creditsDisplay) creditsDisplay.textContent = "Credits: --";
-
-          showWelcome();
-          await renderConversationList();
-          return;
-        }
-
-        const ownerId = session.user.id;
-
-        if (activeOwnerId !== ownerId) {
-          activeOwnerId = ownerId;
-          activeConversation = null;
-          history = [];
-          showWelcome();
-        }
-
-        if (loginBtn) loginBtn.hidden = true;
-        if (logoutBtn) logoutBtn.hidden = false;
-
-        const email = session.user.email || "Signed in";
-
-        if (accountEmail) accountEmail.textContent = email;
-        if (sidebarAccountEmail) sidebarAccountEmail.textContent = email;
-        if (creditsDisplay) creditsDisplay.textContent = "Credits: ...";
-
-        await renderConversationList();
-
-        const { data, error } = await supabaseClient
-          .from("profiles")
-          .select("credits")
-          .eq("id", ownerId)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Profile error:", error);
-          if (creditsDisplay) {
-            creditsDisplay.textContent = "Credits unavailable";
-          }
-          return;
-        }
-
-        if (creditsDisplay) {
-          creditsDisplay.textContent =
-            "Credits: " + (data?.credits ?? "--");
-        }
-      } catch (error) {
-        console.error("Account error:", error);
-        if (creditsDisplay) {
-          creditsDisplay.textContent = "Credits unavailable";
-        }
-      }
-    }
-
-    on(loginBtn, "click", async event => {
-      event.preventDefault();
-
-      if (loginBtn.disabled) return;
-
-      loginBtn.disabled = true;
-      loginBtn.textContent = "Connecting...";
-
-      try {
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: window.location.origin
-          }
-        });
-
-        if (error) throw error;
-      } catch (error) {
-        alert("Google login error: " + error.message);
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Sign in with Google";
-      }
-    });
-
-    on(logoutBtn, "click", async event => {
-      event.preventDefault();
-      logoutBtn.disabled = true;
-
-      try {
-        const { error } = await supabaseClient.auth.signOut();
-        if (error) throw error;
-
-        stopSpeaking();
-        await updateAccount(null);
-      } catch (error) {
-        alert("Logout error: " + error.message);
-      } finally {
-        logoutBtn.disabled = false;
-      }
-    });
-
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-      currentSession = session;
-      setTimeout(() => updateAccount(session), 0);
-    });
-
-    // =====================================
-    // MATHJAX
-    // =====================================
-
-    async function renderMath(element) {
-      if (!window.MathJax || !element) return;
-
-      try {
-        await window.MathJax.startup.promise;
-        await window.MathJax.typesetPromise([element]);
-      } catch (error) {
-        console.error("MathJax error:", error);
-      }
-    }
-
-    // =====================================
-    // VOICE LANGUAGE
-    // =====================================
-
-    const LANGUAGES = {
-      darija: {
-        recognition: "ar-MA",
-        speech: "ar-MA",
-        fallback: "ar"
-      },
-      ar: {
-        recognition: "ar-SA",
-        speech: "ar-SA",
-        fallback: "ar"
-      },
-      en: {
-        recognition: "en-US",
-        speech: "en-US",
-        fallback: "en"
-      },
-      fr: {
-        recognition: "fr-FR",
-        speech: "fr-FR",
-        fallback: "fr"
-      },
-      es: {
-        recognition: "es-ES",
-        speech: "es-ES",
-        fallback: "es"
-      }
-    };
-
-    const LANGUAGE_SAMPLES = {
-      darija: "مرحبا! أنا MY AI، كيف نقدر نعاونك اليوم؟",
-      ar: "مرحباً! أنا MY AI، كيف يمكنني مساعدتك اليوم؟",
-      en: "Hello! I am MY AI. How can I help you today?",
-      fr: "Bonjour ! Je suis MY AI. Comment puis-je vous aider ?",
-      es: "¡Hola! Soy MY AI. ¿Cómo puedo ayudarte hoy?"
-    };
-
-    function browserLanguage() {
-      const lang = (navigator.language || "en").toLowerCase();
-
-      if (lang.startsWith("ar")) return "ar";
-      if (lang.startsWith("fr")) return "fr";
-      if (lang.startsWith("es")) return "es";
-
-      return "en";
-    }
-
-    function currentLanguage() {
-      const selected = languageSelect?.value || "auto";
-
-      if (selected === "auto") {
-        return lastSpeechLanguage || browserLanguage();
-      }
-
-      return selected;
-    }
-
-    function speechConfig(language) {
-      return LANGUAGES[language] || LANGUAGES.en;
-    }
-
-    function recognitionLanguage() {
-      const selected = languageSelect?.value || "auto";
-      return speechConfig(
-        selected === "auto" ? browserLanguage() : selected
-      ).recognition;
-    }
-
-    function detectTextLanguage(text) {
-      if (/[\u0600-\u06FF]/.test(text)) return "ar";
-
-      const value = " " + text.toLowerCase() + " ";
-
-      const french = [
-        " le ", " la ", " les ", " une ", " des ", " je ",
-        " vous ", " bonjour ", " merci ", " pourquoi ", " comment "
-      ];
-
-      const spanish = [
-        " el ", " los ", " las ", " una ", " hola ",
-        " gracias ", " porque ", " buenos "
-      ];
-
-      const fs = french.filter(word => value.includes(word)).length;
-      const ss = spanish.filter(word => value.includes(word)).length;
-
-      if (fs > ss && fs > 0) return "fr";
-      if (ss > fs && ss > 0) return "es";
-
-      return "en";
-    }
-
-    // =====================================
-    // TEXT TO SPEECH
-    // =====================================
-
-    function refreshVoiceList() {
-      if (!voiceSelect || !window.speechSynthesis) return;
-
-      const voices = speechSynthesis.getVoices();
-      const config = speechConfig(currentLanguage());
-
-      const matching = voices.filter(voice =>
-        voice.lang.toLowerCase().startsWith(config.fallback)
-      );
-
-      voiceSelect.innerHTML = "";
-
-      const automatic = document.createElement("option");
-      automatic.value = "default";
-      automatic.textContent = "Automatic voice";
-      voiceSelect.appendChild(automatic);
-
-      const available = matching.length ? matching : voices;
-
-      available.forEach(voice => {
-        const option = document.createElement("option");
-        option.value = String(voices.indexOf(voice));
-        option.textContent = voice.name + " (" + voice.lang + ")";
-        voiceSelect.appendChild(option);
-      });
-    }
-
-    function selectedVoice() {
-      const value = voiceSelect?.value;
-
-      if (!value || value === "default") return null;
-
-      return speechSynthesis.getVoices()[Number(value)] || null;
-    }
-
-    if (window.speechSynthesis) {
-      speechSynthesis.onvoiceschanged = refreshVoiceList;
-      refreshVoiceList();
-      setTimeout(refreshVoiceList, 500);
-    } else if (previewVoiceBtn) {
-      previewVoiceBtn.disabled = true;
-    }
-
-    function cleanSpeechText(text) {
-      return text
-        .replace(/```[\s\S]*?```/g, " ")
-        .replace(/`([^`]+)`/g, "$1")
-        .replace(/\$\$[\s\S]*?\$\$/g, " ")
-        .replace(/\$[^$]*\$/g, " ")
-        .replace(/https?:\/\/\S+/g, " ")
-        .replace(/[#*_~>|]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-
-    function stopSpeaking() {
-      if (window.speechSynthesis) speechSynthesis.cancel();
-      if (stopVoiceBtn) stopVoiceBtn.hidden = true;
-    }
-
-    function speakText(text, languageOverride = null) {
-      if (!window.speechSynthesis) {
-        if (voiceStatus) {
-          voiceStatus.textContent = "Voice playback is not supported.";
-        }
+      if (currentSession?.user?.id !== conversation.ownerId) {
         return;
       }
 
-      const clean = cleanSpeechText(text);
-      if (!clean) return;
+      activeConversation = conversation;
+      elements.messages.innerHTML = "";
 
-      stopSpeaking();
-
-      const language = languageOverride || currentLanguage();
-      const utterance = new SpeechSynthesisUtterance(clean);
-      utterance.lang = speechConfig(language).speech;
-      utterance.rate = 0.95;
-
-      const voice = selectedVoice();
-      if (voice) {
-        utterance.voice = voice;
-        utterance.lang = voice.lang;
-      }
-
-      utterance.onstart = () => {
-        if (voiceStatus) voiceStatus.textContent = "MY AI is speaking...";
-        if (stopVoiceBtn) stopVoiceBtn.hidden = false;
-      };
-
-      utterance.onend = () => {
-        if (voiceStatus) voiceStatus.textContent = "";
-        if (stopVoiceBtn) stopVoiceBtn.hidden = true;
-      };
-
-      utterance.onerror = error => {
-        console.error("Speech error:", error);
-        if (voiceStatus) {
-          voiceStatus.textContent = "Voice playback unavailable.";
+      for (const message of conversation.messages || []) {
+        if (!message.sentToModel && message.role === "user") {
+          continue;
         }
-        if (stopVoiceBtn) stopVoiceBtn.hidden = true;
-      };
 
-      speechSynthesis.speak(utterance);
-    }
-
-    on(previewVoiceBtn, "click", event => {
-      event.preventDefault();
-
-      const language = currentLanguage();
-      speakText(
-        LANGUAGE_SAMPLES[language] || LANGUAGE_SAMPLES.en,
-        language
-      );
-    });
-
-    // =====================================
-    // LANGUAGE SETTINGS
-    // =====================================
-
-    try {
-      const saved = localStorage.getItem("myai_voice_language");
-
-      if (saved === "auto" || LANGUAGES[saved]) {
-        if (languageSelect) languageSelect.value = saved;
-      }
-    } catch (error) {
-      console.warn("Could not read language setting.");
-    }
-
-    on(languageSelect, "change", () => {
-      if (isListening && recognition) recognition.stop();
-
-      stopSpeaking();
-
-      try {
-        localStorage.setItem(
-          "myai_voice_language",
-          languageSelect.value
+        addMessage(
+          message.role,
+          message.content,
+          message.imagePreview
         );
-      } catch (error) {
-        console.warn("Could not save language setting.");
       }
 
-      if (languageSelect.value !== "auto") {
-        lastSpeechLanguage = languageSelect.value;
+      closeSidebar();
+    }
+
+    async function startNewChat() {
+      activeConversation = null;
+      clearImagePreview();
+      showWelcome();
+      closeSidebar();
+
+      await renderConversationList();
+      elements.input?.focus();
+    }
+
+    /* =====================================
+       SIDEBAR
+    ===================================== */
+
+    function openSidebar() {
+      elements.sidebar?.classList.add("sidebar-open");
+      elements.overlay?.classList.add("overlay-visible");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeSidebar() {
+      elements.sidebar?.classList.remove("sidebar-open");
+      elements.overlay?.classList.remove("overlay-visible");
+      document.body.style.overflow = "";
+    }
+
+    elements.openSidebar?.addEventListener("click", openSidebar);
+    elements.closeSidebar?.addEventListener("click", closeSidebar);
+    elements.overlay?.addEventListener("click", closeSidebar);
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeSidebar();
+        elements.aboutModal?.classList.remove("active");
       }
-
-      refreshVoiceList();
-
-      if (recognition) {
-        recognition.lang = recognitionLanguage();
-      }
-
-      if (voiceStatus) voiceStatus.textContent = "Language updated.";
     });
 
-    on(voiceSettingsToggle, "click", event => {
-      event.preventDefault();
+    elements.newChat?.addEventListener("click", startNewChat);
 
-      if (!voiceSettingsPanel) return;
+    elements.settings?.addEventListener("click", () => {
+      closeSidebar();
 
-      const opening = voiceSettingsPanel.hidden;
-      voiceSettingsPanel.hidden = !opening;
+      if (elements.voicePanel) {
+        elements.voicePanel.hidden = false;
 
-      voiceSettingsToggle.setAttribute(
-        "aria-expanded",
-        String(opening)
-      );
+        elements.voicePanel.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }
     });
 
-    // =====================================
-    // SPEECH RECOGNITION
-    // =====================================
+    elements.about?.addEventListener("click", () => {
+      closeSidebar();
+      elements.aboutModal?.classList.add("active");
+    });
 
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+    elements.closeAbout?.addEventListener("click", () => {
+      elements.aboutModal?.classList.remove("active");
+    });
 
-    if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-      recognition.lang = recognitionLanguage();
+    elements.aboutModal?.addEventListener("click", event => {
+      if (event.target === elements.aboutModal) {
+        elements.aboutModal.classList.remove("active");
+      }
+    });
 
-      recognition.onstart = () => {
-        isListening = true;
-        recognizedText = "";
-        speechError = null;
+    /* =====================================
+       IMAGE UPLOAD
+    ===================================== */
 
-        voiceInputBtn?.classList.add("listening");
+    function clearImagePreview() {
+      pendingImage = null;
 
-        if (voiceInputBtn) {
-          voiceInputBtn.textContent = "●";
-          voiceInputBtn.title = "Listening...";
-        }
+      if (elements.imageInput) {
+        elements.imageInput.value = "";
+      }
 
-        if (voiceStatus) voiceStatus.textContent = "Speak now...";
-      };
+      if (elements.previewImg) {
+        elements.previewImg.src = "";
+      }
 
-      recognition.onresult = event => {
-        let finalText = "";
-        let interimText = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-
-          if (event.results[i].isFinal) {
-            finalText += transcript;
-          } else {
-            interimText += transcript;
-          }
-        }
-
-        if (finalText.trim()) {
-          recognizedText += " " + finalText.trim();
-        }
-
-        if (interimText && voiceStatus) {
-          voiceStatus.textContent = "Hearing: " + interimText;
-        }
-      };
-
-      recognition.onerror = event => {
-        speechError = event.error;
-
-        if (!voiceStatus) return;
-
-        if (event.error === "not-allowed") {
-          voiceStatus.textContent = "Please allow microphone access.";
-        } else if (event.error === "no-speech") {
-          voiceStatus.textContent = "No speech detected.";
-        } else {
-          voiceStatus.textContent =
-            "Voice recognition error: " + event.error;
-        }
-      };
-
-      recognition.onend = () => {
-        isListening = false;
-
-        voiceInputBtn?.classList.remove("listening");
-
-        if (voiceInputBtn) {
-          voiceInputBtn.textContent = "🎙";
-          voiceInputBtn.title = "Speak";
-        }
-
-        const spoken = recognizedText.trim();
-
-        if (spoken && !speechError) {
-          const selected = languageSelect?.value || "auto";
-
-          lastSpeechLanguage = selected === "auto"
-            ? detectTextLanguage(spoken)
-            : selected;
-
-          input.value = (input.value + " " + spoken).trim();
-          input.style.height = "auto";
-          input.style.height =
-            Math.min(input.scrollHeight, 150) + "px";
-
-          sendMessage({ speakReply: true });
-        } else if (voiceStatus) {
-          voiceStatus.textContent = "";
-        }
-
-        recognizedText = "";
-      };
-    } else {
-      if (voiceInputBtn) {
-        voiceInputBtn.disabled = true;
-        voiceInputBtn.title = "Speech recognition is not supported.";
+      if (elements.imagePreview) {
+        elements.imagePreview.hidden = true;
       }
     }
 
-    on(voiceInputBtn, "click", event => {
-      event.preventDefault();
-
-      if (!recognition) {
-        alert("Voice recognition is not supported in this browser.");
-        return;
+    function showImagePreview(dataUrl) {
+      if (elements.previewImg) {
+        elements.previewImg.src = dataUrl;
       }
 
-      if (isListening) {
-        recognition.stop();
-        return;
+      if (elements.imagePreview) {
+        elements.imagePreview.hidden = false;
       }
-
-      stopSpeaking();
-      recognizedText = "";
-      speechError = null;
-      recognition.lang = recognitionLanguage();
-
-      try {
-        recognition.start();
-      } catch (error) {
-        console.error(error);
-        if (voiceStatus) {
-          voiceStatus.textContent = "Could not start microphone.";
-        }
-      }
-    });
-
-    on(voiceOutputBtn, "click", event => {
-      event.preventDefault();
-
-      autoSpeak = !autoSpeak;
-
-      voiceOutputBtn.classList.toggle("active", autoSpeak);
-      voiceOutputBtn.textContent = autoSpeak
-        ? "🔊 Voice on"
-        : "🔊 Voice off";
-
-      if (voiceStatus) {
-        voiceStatus.textContent = autoSpeak
-          ? "Automatic voice playback enabled."
-          : "Automatic voice playback disabled.";
-      }
-    });
-
-    on(stopVoiceBtn, "click", event => {
-      event.preventDefault();
-      stopSpeaking();
-    });
-
-    // =====================================
-    // IMAGE MANAGEMENT
-    // =====================================
-
-    function clearImage() {
-      selectedImage = null;
-
-      if (imageInput) imageInput.value = "";
-      if (imagePreview) imagePreview.hidden = true;
-      if (previewImg) previewImg.removeAttribute("src");
     }
 
     function compressImage(file) {
       return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(file);
         const image = new Image();
+        const reader = new FileReader();
 
-        image.onload = () => {
-          const maxSide = 1280;
-          const scale = Math.min(
-            1,
-            maxSide / Math.max(image.width, image.height)
-          );
+        reader.onload = () => {
+          image.onload = () => {
+            const maxDimension = 1280;
 
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.round(image.width * scale);
-          canvas.height = Math.round(image.height * scale);
+            let width = image.width;
+            let height = image.height;
 
-          const context = canvas.getContext("2d");
+            if (width > maxDimension || height > maxDimension) {
+              const ratio = Math.min(
+                maxDimension / width,
+                maxDimension / height
+              );
 
-          if (!context) {
-            URL.revokeObjectURL(url);
-            reject(new Error("Image processing failed."));
-            return;
-          }
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
+            }
 
-          context.drawImage(
-            image,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
 
-          URL.revokeObjectURL(url);
+            const context = canvas.getContext("2d");
+            context.drawImage(image, 0, 0, width, height);
 
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+            const dataUrl = canvas.toDataURL(
+              "image/jpeg",
+              0.75
+            );
 
-          resolve({
-            data: dataUrl.split(",")[1],
-            mimeType: "image/jpeg",
-            preview: dataUrl
-          });
+            resolve({
+              preview: dataUrl,
+              mimeType: "image/jpeg",
+              data: dataUrl.split(",")[1]
+            });
+          };
+
+          image.onerror = reject;
+          image.src = reader.result;
         };
 
-        image.onerror = () => {
-          URL.revokeObjectURL(url);
-          reject(new Error("Could not read this image."));
-        };
-
-        image.src = url;
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
     }
 
-    on(attachBtn, "click", event => {
-      event.preventDefault();
-      imageInput?.click();
+    elements.attach?.addEventListener("click", () => {
+      elements.imageInput?.click();
     });
 
-    on(imageInput, "change", async () => {
-      const file = imageInput.files?.[0];
+    elements.imageInput?.addEventListener("change", async () => {
+      const file = elements.imageInput.files?.[0];
       if (!file) return;
 
-      const allowed = [
-        "image/jpeg",
-        "image/png",
-        "image/webp"
-      ];
-
-      if (!allowed.includes(file.type)) {
-        alert("Choose a JPG, PNG or WEBP image.");
-        clearImage();
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        showError("Please select a JPG, PNG, or WEBP image.");
+        clearImagePreview();
         return;
       }
 
-      if (file.size > 10 * 1024 * 1024) {
-        alert("Choose an image smaller than 10 MB.");
-        clearImage();
+      if (file.size > MAX_IMAGE_SIZE) {
+        showError("Image size must be less than 10 MB.");
+        clearImagePreview();
         return;
       }
 
       try {
-        attachBtn && (attachBtn.disabled = true);
-
-        selectedImage = await compressImage(file);
-
-        if (previewImg) previewImg.src = selectedImage.preview;
-        if (imagePreview) imagePreview.hidden = false;
+        pendingImage = await compressImage(file);
+        showImagePreview(pendingImage.preview);
       } catch (error) {
-        alert("Could not load image: " + error.message);
-        clearImage();
-      } finally {
-        if (attachBtn) attachBtn.disabled = false;
+        console.error("Image error:", error);
+        showError("Could not load this image.");
+        clearImagePreview();
       }
     });
 
-    on(removeImageBtn, "click", event => {
-      event.preventDefault();
-      clearImage();
+    elements.removeImage?.addEventListener(
+      "click",
+      clearImagePreview
+    );
+
+    /* =====================================
+       VOICE OUTPUT
+    ===================================== */
+
+    function detectLanguage(text) {
+      if (/[\u0600-\u06FF]/.test(text)) return "ar-SA";
+
+      if (/[àâçéèêëîïôûùüÿœ]/i.test(text)) {
+        return "fr-FR";
+      }
+
+      return getVoiceLanguage();
+    }
+
+    function stopSpeaking() {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function speakText(text) {
+      if (!("speechSynthesis" in window) || !text) return;
+
+      stopSpeaking();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = detectLanguage(text);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+
+      const voices = window.speechSynthesis.getVoices();
+      const selectedVoice = elements.voiceChoice?.value;
+
+      if (selectedVoice) {
+        const voice = voices.find(v => v.name === selectedVoice);
+        if (voice) utterance.voice = voice;
+      } else {
+        const language = utterance.lang.split("-")[0];
+
+        const voice = voices.find(v =>
+          v.lang.toLowerCase().startsWith(language.toLowerCase())
+        );
+
+        if (voice) utterance.voice = voice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function loadVoices() {
+      if (!elements.voiceChoice || !("speechSynthesis" in window)) {
+        return;
+      }
+
+      const voices = window.speechSynthesis.getVoices();
+      const previous = elements.voiceChoice.value;
+
+      elements.voiceChoice.innerHTML =
+        `<option value="">Automatic voice</option>`;
+
+      voices.forEach(voice => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+
+        elements.voiceChoice.appendChild(option);
+      });
+
+      if (previous) {
+        elements.voiceChoice.value = previous;
+      }
+    }
+
+    window.speechSynthesis?.addEventListener?.(
+      "voiceschanged",
+      loadVoices
+    );
+
+    elements.voiceOutput?.addEventListener("click", () => {
+      autoSpeak = !autoSpeak;
+
+      elements.voiceOutput.classList.toggle("active", autoSpeak);
+      elements.voiceOutput.setAttribute(
+        "aria-pressed",
+        String(autoSpeak)
+      );
+
+      setStatus(
+        autoSpeak
+          ? "Voice responses enabled"
+          : "Voice responses disabled"
+      );
     });
 
-    // =====================================
-    // SEND MESSAGE
-    // =====================================
+    elements.stopVoice?.addEventListener("click", stopSpeaking);
 
-    async function sendMessage({ speakReply = false } = {}) {
+    elements.voiceToggle?.addEventListener("click", () => {
+      if (!elements.voicePanel) return;
+      elements.voicePanel.hidden = !elements.voicePanel.hidden;
+    });
+
+    elements.previewVoice?.addEventListener("click", () => {
+      speakText("Hello! This is the MY AI voice preview.");
+    });
+
+    /* =====================================
+       VOICE INPUT
+    ===================================== */
+
+    function initializeRecognition() {
+      const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        setStatus("Voice input is not supported by this browser.");
+        return null;
+      }
+
+      const instance = new SpeechRecognition();
+
+      instance.lang = getVoiceLanguage();
+      instance.continuous = false;
+      instance.interimResults = true;
+
+      let finalTranscript = "";
+
+      instance.onstart = () => {
+        isListening = true;
+        finalTranscript = "";
+
+        setStatus("Listening...");
+        elements.voiceInput?.classList.add("active");
+      };
+
+      instance.onresult = event => {
+        let interimText = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript;
+          } else {
+            interimText += result[0].transcript;
+          }
+        }
+
+        if (elements.input) {
+          elements.input.value =
+            finalTranscript + interimText;
+        }
+      };
+
+      instance.onerror = event => {
+        console.error("Speech recognition error:", event.error);
+        setStatus("Voice recognition error.");
+      };
+
+      instance.onend = () => {
+        isListening = false;
+
+        elements.voiceInput?.classList.remove("active");
+        setStatus("Voice input stopped.");
+      };
+
+      return instance;
+    }
+
+    elements.voiceInput?.addEventListener("click", () => {
+      if (isListening) {
+        recognition?.stop();
+        return;
+      }
+
+      recognition = initializeRecognition();
+      if (!recognition) return;
+
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error("Recognition start error:", error);
+        setStatus("Could not start voice recognition.");
+      }
+    });
+
+    elements.voiceLanguage?.addEventListener("change", () => {
+      if (recognition && !isListening) {
+        recognition.lang = getVoiceLanguage();
+      }
+    });
+
+    /* =====================================
+       GEMINI CHAT
+    ===================================== */
+
+    function getModelHistory() {
+      if (!activeConversation?.messages) return [];
+
+      return activeConversation.messages
+        .filter(message => message.sentToModel)
+        .map(message => ({
+          role: message.role === "assistant" ? "model" : "user",
+          content: message.content || ""
+        }));
+    }
+
+    async function sendMessage() {
       if (isSending) return;
 
-      const text = input.value.trim();
+      const messageText = elements.input?.value.trim() || "";
 
-      if (!text && !selectedImage) return;
+      if (!messageText && !pendingImage) return;
+
+      if (!currentSession) {
+        await getSession();
+      }
+
+      if (!currentSession) {
+        showError("Please sign in with Google before sending a message.");
+        return;
+      }
 
       isSending = true;
 
-      const imageToSend = selectedImage;
-      const messageText = text || "Please analyze this image.";
+      const imageToSend = pendingImage
+        ? { ...pendingImage }
+        : null;
 
-      let loading = null;
+      const userMessage = {
+        role: "user",
+        content: messageText,
+        imagePreview: imageToSend?.preview || null,
+        sentToModel: false,
+        timestamp: Date.now()
+      };
+
+      if (elements.send) elements.send.disabled = true;
+      if (elements.input) elements.input.disabled = true;
 
       try {
-        const { data, error } = await supabaseClient.auth.getSession();
-
-        if (error) throw error;
-
-        const session = data.session;
-
-        if (!session) {
-          addMessage(
-            "Please sign in with Google before using MY AI.",
-            "assistant"
-          );
-
-          if (loginBtn) loginBtn.hidden = false;
-          return;
-        }
-
-        input.disabled = true;
-        sendBtn.disabled = true;
-
-        if (attachBtn) attachBtn.disabled = true;
-        if (voiceInputBtn) voiceInputBtn.disabled = true;
-
-        await ensureActiveConversation(messageText);
-
-        const userMessage = {
-          role: "user",
-          content: messageText,
-          imagePreview: imageToSend?.preview || null,
-          sentToModel: false,
-          timestamp: Date.now()
-        };
+        await ensureActiveConversation(messageText || "Image");
 
         await storeMessage(userMessage);
 
         addMessage(
-          messageText,
           "user",
+          messageText,
           imageToSend?.preview || null
         );
 
-        input.value = "";
-        input.style.height = "auto";
-        clearImage();
+        if (elements.input) elements.input.value = "";
 
-        loading = addMessage("Thinking...", "assistant");
+        clearImagePreview();
+        showThinking();
+
+        const history = getModelHistory();
 
         const response = await fetch("/api/chat", {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + session.access_token
+            "Authorization": `Bearer ${currentSession.access_token}`
           },
+
           body: JSON.stringify({
             message: messageText,
             history,
+
             image: imageToSend
               ? {
-                  data: imageToSend.data,
-                  mimeType: imageToSend.mimeType
+                  mimeType: imageToSend.mimeType,
+                  data: imageToSend.data
                 }
               : null
           })
@@ -1404,171 +1153,152 @@ JavaScript
         try {
           result = await response.json();
         } catch {
-          throw new Error(
-            "Invalid server response. Check the /api/chat endpoint."
-          );
+          throw new Error("The server returned an invalid response.");
         }
 
         if (!response.ok) {
           throw new Error(
-            result.error || "Server error: " + response.status
+            result.error ||
+            result.message ||
+            `Server error (${response.status})`
           );
         }
 
-        if (!result.reply) {
-          throw new Error("The server returned an empty response.");
+        const reply =
+          result.reply ||
+          result.response ||
+          result.text;
+
+        if (!reply) {
+          throw new Error("The AI returned an empty response.");
         }
 
-        loading.textContent = result.reply;
-        await renderMath(loading);
+        removeThinking();
 
         userMessage.sentToModel = true;
 
         const assistantMessage = {
           role: "assistant",
-          content: result.reply,
+          content: reply,
           sentToModel: true,
           timestamp: Date.now()
         };
 
-        activeConversation.messages.push(assistantMessage);
-        activeConversation.updatedAt = Date.now();
+        await storeMessage(assistantMessage);
 
-        history.push(
-          { role: "user", content: messageText },
-          { role: "assistant", content: result.reply }
-        );
+        const assistantElement = addMessage("assistant", reply);
+
+        renderMath(assistantElement);
 
         await saveConversation(activeConversation);
         await renderConversationList();
 
-        if (speakReply || autoSpeak) {
-          let language = currentLanguage();
-
-          if (languageSelect?.value === "auto") {
-            language =
-              lastSpeechLanguage || detectTextLanguage(result.reply);
-          }
-
-          speakText(result.reply, language);
+        if (autoSpeak) {
+          speakText(reply);
         }
+
       } catch (error) {
-        console.error("MY AI chat error:", error);
+        console.error("Send message error:", error);
 
-        if (loading) {
-          loading.textContent = "Connection error: " + error.message;
-        } else {
-          addMessage(
-            "Connection error: " + error.message,
-            "assistant"
-          );
-        }
+        removeThinking();
+
+        addMessage(
+          "assistant",
+          `Sorry, something went wrong: ${error.message}`
+        );
 
         if (activeConversation) {
-          try {
-            await saveConversation(activeConversation);
-            await renderConversationList();
-          } catch (saveError) {
-            console.error("Conversation save error:", saveError);
-          }
+          await saveConversation(activeConversation);
         }
+
       } finally {
         isSending = false;
 
-        input.disabled = false;
-        sendBtn.disabled = false;
+        if (elements.send) elements.send.disabled = false;
+        if (elements.input) elements.input.disabled = false;
 
-        if (attachBtn) attachBtn.disabled = false;
-        if (voiceInputBtn) {
-          voiceInputBtn.disabled = !recognition;
-        }
-
-        input.focus();
-        messages.scrollTop = messages.scrollHeight;
+        elements.input?.focus();
       }
     }
 
-    // =====================================
-    // SEND BUTTON + FORM
-    // =====================================
+    /* =====================================
+       FORM EVENTS
+    ===================================== */
 
-    on(sendBtn, "click", event => {
+    elements.form?.addEventListener("submit", event => {
       event.preventDefault();
-      event.stopPropagation();
       sendMessage();
     });
 
-    on(form, "submit", event => {
+    elements.send?.addEventListener("click", event => {
       event.preventDefault();
-      event.stopPropagation();
       sendMessage();
     });
 
-    // =====================================
-    // TEXTAREA
-    // =====================================
-
-    on(input, "input", () => {
-      input.style.height = "auto";
-      input.style.height =
-        Math.min(input.scrollHeight, 150) + "px";
-    });
-
-    on(input, "keydown", event => {
-      if (event.key === "Enter" && !event.shiftKey) {
+    elements.input?.addEventListener("keydown", event => {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.isComposing
+      ) {
         event.preventDefault();
         sendMessage();
       }
     });
 
-    // =====================================
-    // WELCOME SUGGESTIONS
-    // =====================================
+    /* =====================================
+       AUTH EVENTS
+    ===================================== */
 
-    on(messages, "click", event => {
-      const suggestion = event.target.closest(".suggestion");
-      if (!suggestion) return;
+    elements.login?.addEventListener("click", loginWithGoogle);
+    elements.logout?.addEventListener("click", logout);
 
-      event.preventDefault();
+    /* =====================================
+       START
+    ===================================== */
 
-      input.value = suggestion.dataset.prompt || "";
-      input.focus();
+    async function start() {
+      closeSidebar();
+      createHistoryInterface();
+      showWelcome();
+      loadVoices();
 
-      input.style.height = "auto";
-      input.style.height =
-        Math.min(input.scrollHeight, 150) + "px";
-    });
+      if (!initializeSupabase()) {
+        showError(
+          "Supabase could not be initialized. Check the Supabase SDK in index.html."
+        );
+        return;
+      }
 
-    // =====================================
-    // INITIALIZATION
-    // =====================================
+      try {
+        const session = await getSession();
+        await updateAccount(session);
 
-    createHistoryInterface();
-    showWelcome();
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentSession = session || null;
 
-    updateAccount();
+          updateAccount(currentSession).catch(error => {
+            console.error("Account update error:", error);
+          });
+        });
 
-    console.info("MY AI initialized successfully.");
-  }
-
-  // =====================================
-  // SAFE START
-  // =====================================
-
-  function start() {
-    try {
-      initializeMYAI();
-    } catch (error) {
-      console.error("MY AI initialization failed:", error);
-      alert("MY AI initialization error: " + error.message);
+      } catch (error) {
+        console.error("Application startup error:", error);
+      }
     }
+
+    start().catch(error => {
+      console.error("MY AI startup failed:", error);
+    });
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start, {
-      once: true
-    });
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeMYAI,
+      { once: true }
+    );
   } else {
-    start();
+    initializeMYAI();
   }
 })();
