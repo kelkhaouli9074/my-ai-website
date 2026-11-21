@@ -49,6 +49,9 @@ const languageSelect = document.getElementById("voice-language");
 const voiceSelect = document.getElementById("voice-choice");
 const previewVoiceBtn = document.getElementById("preview-voice-btn");
 
+const voiceSettingsToggle = document.getElementById("voice-settings-toggle");
+const voiceSettingsPanel = document.getElementById("voice-settings-panel");
+
 let history = [];
 let selectedImage = null;
 let currentSession = null;
@@ -60,6 +63,34 @@ let recognizedText = "";
 let speechError = null;
 let selectedVoice = null;
 let lastSpeechLanguage = null;
+
+
+/* =====================================
+   VOICE SETTINGS PANEL
+===================================== */
+
+voiceSettingsToggle.addEventListener("click", () => {
+  const isOpen = !voiceSettingsPanel.hidden;
+
+  voiceSettingsPanel.hidden = isOpen;
+  voiceSettingsToggle.setAttribute("aria-expanded", String(!isOpen));
+});
+
+document.addEventListener("click", event => {
+  const clickedInside =
+    voiceSettingsPanel.contains(event.target) ||
+    voiceSettingsToggle.contains(event.target);
+
+  if (!clickedInside && !voiceSettingsPanel.hidden) {
+    voiceSettingsPanel.hidden = true;
+    voiceSettingsToggle.setAttribute("aria-expanded", "false");
+  }
+});
+
+
+/* =====================================
+   LANGUAGE CONFIGURATION
+===================================== */
 
 const LANGUAGE_CONFIG = {
   darija: {
@@ -368,7 +399,6 @@ function refreshVoiceList() {
     const option = document.createElement("option");
     option.value = String(index);
     option.textContent = voice.name + " (" + voice.lang + ")";
-    option.dataset.voiceName = voice.name;
     voiceSelect.appendChild(option);
   });
 
@@ -431,7 +461,6 @@ function speakText(text, languageOverride = null) {
 
   const language = languageOverride || getCurrentLanguage();
   const config = getSpeechLanguage(language);
-
   const utterance = new SpeechSynthesisUtterance(cleanText);
 
   utterance.lang = config.speech;
@@ -493,7 +522,10 @@ previewVoiceBtn.addEventListener("click", () => {
 
 const savedLanguage = localStorage.getItem("myai_voice_language");
 
-if (savedLanguage && LANGUAGE_CONFIG[savedLanguage] || savedLanguage === "auto") {
+if (
+  (savedLanguage && LANGUAGE_CONFIG[savedLanguage]) ||
+  savedLanguage === "auto"
+) {
   languageSelect.value = savedLanguage;
 }
 
@@ -546,7 +578,8 @@ if (SpeechRecognition) {
     speechError = null;
 
     voiceInputBtn.classList.add("listening");
-    voiceInputBtn.textContent = "🔴 Listening...";
+    voiceInputBtn.textContent = "●";
+    voiceInputBtn.title = "Listening...";
     voiceStatus.textContent = "Speak now...";
   };
 
@@ -590,7 +623,8 @@ if (SpeechRecognition) {
     isListening = false;
 
     voiceInputBtn.classList.remove("listening");
-    voiceInputBtn.textContent = "🎙️ Speak";
+    voiceInputBtn.textContent = "🎙";
+    voiceInputBtn.title = "Speak";
 
     const spokenText = recognizedText.trim();
 
@@ -608,7 +642,6 @@ if (SpeechRecognition) {
       input.style.height = Math.min(input.scrollHeight, 150) + "px";
 
       voiceStatus.textContent = "Sending your message...";
-
       sendMessage({ speakReply: true });
 
     } else if (!speechError) {
@@ -914,6 +947,75 @@ input.addEventListener("keydown", event => {
 
 
 /* =====================================
+   WELCOME SCREEN
+===================================== */
+
+function showWelcome() {
+  messages.innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="welcome-orb">
+        <div class="orb-core">M</div>
+      </div>
+
+      <div class="welcome-tag">
+        <span class="tag-line"></span>
+        YOUR PERSONAL AI
+        <span class="tag-line"></span>
+      </div>
+
+      <h1>Think beyond<br><span>the ordinary.</span></h1>
+      <p>
+        Ask questions, explore ideas, create something new
+        or learn something you have always wanted to understand.
+      </p>
+
+      <div class="suggestions">
+        <button type="button" class="suggestion"
+          data-prompt="Explain a difficult scientific concept simply.">
+          <span class="suggestion-icon">◈</span>
+          <span class="suggestion-copy">
+            <strong>Learn something</strong>
+            <small>Understand difficult concepts</small>
+          </span>
+          <span class="suggestion-arrow">↗</span>
+        </button>
+
+        <button type="button" class="suggestion"
+          data-prompt="Help me solve a mathematics problem step by step.">
+          <span class="suggestion-icon">∑</span>
+          <span class="suggestion-copy">
+            <strong>Mathematics</strong>
+            <small>Equations and calculations</small>
+          </span>
+          <span class="suggestion-arrow">↗</span>
+        </button>
+
+        <button type="button" class="suggestion"
+          data-prompt="Give me creative ideas for a new project.">
+          <span class="suggestion-icon">✧</span>
+          <span class="suggestion-copy">
+            <strong>Explore ideas</strong>
+            <small>Discover new possibilities</small>
+          </span>
+          <span class="suggestion-arrow">↗</span>
+        </button>
+
+        <button type="button" class="suggestion"
+          data-prompt="Help me write and improve some code.">
+          <span class="suggestion-icon">⌘</span>
+          <span class="suggestion-copy">
+            <strong>Write code</strong>
+            <small>Build and improve projects</small>
+          </span>
+          <span class="suggestion-arrow">↗</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+
+/* =====================================
    NEW CHAT
 ===================================== */
 
@@ -926,44 +1028,14 @@ newChatBtn.addEventListener("click", () => {
   }
 
   clearImage();
-
-  messages.innerHTML = `
-    <div class="welcome" id="welcome">
-      <div class="welcome-icon">⎈</div>
-      <div class="welcome-tag">YOUR PERSONAL AI</div>
-      <h1>What can I help you with?</h1>
-      <p>Ask questions, explore ideas, or learn something new.</p>
-
-      <div class="suggestions">
-        <button type="button" class="suggestion"
-          data-prompt="Explain a difficult scientific concept simply.">
-          <span>◈</span>
-          <div><strong>Learn something</strong><small>Understand difficult concepts</small></div>
-        </button>
-
-        <button type="button" class="suggestion"
-          data-prompt="Help me solve a mathematics problem step by step.">
-          <span>∑</span>
-          <div><strong>Mathematics</strong><small>Equations and calculations</small></div>
-        </button>
-
-        <button type="button" class="suggestion"
-          data-prompt="Give me creative ideas for a new project.">
-          <span>✧</span>
-          <div><strong>Explore ideas</strong><small>Discover new possibilities</small></div>
-        </button>
-
-        <button type="button" class="suggestion"
-          data-prompt="Help me write and improve some code.">
-          <span>⌘</span>
-          <div><strong>Write code</strong><small>Build and improve projects</small></div>
-        </button>
-      </div>
-    </div>
-  `;
+  showWelcome();
 
   input.value = "";
   input.style.height = "auto";
+
+  voiceSettingsPanel.hidden = true;
+  voiceSettingsToggle.setAttribute("aria-expanded", "false");
+
   input.focus();
 });
 
