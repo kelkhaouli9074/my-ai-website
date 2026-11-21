@@ -1,0 +1,5 @@
+
+User-agent: *
+Allow: /
+
+Sitemap: https://my-ai-website-murex.vercel.app/sitemap.xml
