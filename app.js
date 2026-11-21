@@ -3,7 +3,7 @@
 
 /* =========================================
    MY AI — COMPLETE APP.JS
-   Fixed syntax + Chat + Supabase + History
+   Fixed History UI + Chat + Supabase
 ========================================= */
 
 (() => {
@@ -30,36 +30,30 @@
       input: $("message-input"),
       messages: $("chat-messages"),
       send: $("send-btn"),
-
       newChat: $("new-chat-btn"),
       sidebar: $("main-sidebar"),
       overlay: $("sidebar-overlay"),
       openSidebar: $("open-sidebar"),
       closeSidebar: $("close-sidebar"),
-
       login: $("google-login"),
       logout: $("google-logout"),
       email: $("account-email"),
       sidebarEmail: $("sidebar-account-email"),
       credits: $("credits-display"),
-
       imageInput: $("image-input"),
       attach: $("attach-btn"),
       imagePreview: $("image-preview"),
       previewImg: $("preview-img"),
       removeImage: $("remove-image"),
-
       voiceInput: $("voice-input-btn"),
       voiceOutput: $("voice-output-btn"),
       stopVoice: $("stop-voice-btn"),
-
       voiceToggle: $("voice-settings-toggle"),
       voicePanel: $("voice-settings-panel"),
       voiceLanguage: $("voice-language"),
       voiceChoice: $("voice-choice"),
       previewVoice: $("preview-voice-btn"),
       voiceStatus: $("voice-status"),
-
       settings: $("open-settings"),
       about: $("open-about"),
       aboutModal: $("about-modal"),
@@ -74,7 +68,6 @@
     let recognition = null;
     let isListening = false;
     let autoSpeak = false;
-
     let databasePromise = null;
 
     const voiceLanguages = {
@@ -102,13 +95,13 @@
     }
 
     function scrollToBottom() {
-      if (!elements.messages) return;
-      elements.messages.scrollTop = elements.messages.scrollHeight;
+      if (elements.messages) {
+        elements.messages.scrollTop =
+          elements.messages.scrollHeight;
+      }
     }
 
-    /* =====================================
-       SUPABASE
-    ===================================== */
+    /* SUPABASE */
 
     function initializeSupabase() {
       if (!window.supabase?.createClient) {
@@ -145,13 +138,8 @@
       const loggedIn = Boolean(currentSession);
       const email = currentSession?.user?.email || "";
 
-      if (elements.login) {
-        elements.login.hidden = loggedIn;
-      }
-
-      if (elements.logout) {
-        elements.logout.hidden = !loggedIn;
-      }
+      if (elements.login) elements.login.hidden = loggedIn;
+      if (elements.logout) elements.logout.hidden = !loggedIn;
 
       if (elements.email) {
         elements.email.textContent =
@@ -164,8 +152,7 @@
       }
 
       if (elements.credits) {
-        elements.credits.textContent =
-          loggedIn ? "..." : "0";
+        elements.credits.textContent = loggedIn ? "..." : "0";
       }
 
       if (!loggedIn) {
@@ -233,9 +220,7 @@
       }
     }
 
-    /* =====================================
-       INDEXED DB
-    ===================================== */
+    /* INDEXED DB */
 
     function openDatabase() {
       if (databasePromise) return databasePromise;
@@ -276,7 +261,11 @@
         };
 
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+
+        request.onerror = () => {
+          databasePromise = null;
+          reject(request.error);
+        };
       });
 
       return databasePromise;
@@ -301,10 +290,7 @@
           return;
         }
 
-        transaction.oncomplete = () => {
-          resolve(request?.result);
-        };
-
+        transaction.oncomplete = () => resolve(request?.result);
         transaction.onerror = () => reject(transaction.error);
         transaction.onabort = () => reject(transaction.error);
       });
@@ -362,8 +348,10 @@
             "readonly"
           );
 
-          const store = transaction.objectStore("conversations");
-          const request = store.index("ownerId").getAll(ownerId);
+          const request = transaction
+            .objectStore("conversations")
+            .index("ownerId")
+            .getAll(ownerId);
 
           request.onsuccess = () => {
             const conversations = request.result || [];
@@ -377,7 +365,6 @@
 
           request.onerror = () => reject(request.error);
         });
-
       } catch (error) {
         console.error("List conversations error:", error);
         return [];
@@ -413,7 +400,6 @@
 
       activeConversation = null;
       showWelcome();
-
       await renderConversationList();
     }
 
@@ -460,9 +446,7 @@
       await saveConversation(activeConversation);
     }
 
-    /* =====================================
-       CHAT DISPLAY
-    ===================================== */
+    /* CHAT DISPLAY */
 
     function addMessage(role, content, image = null) {
       if (!elements.messages) return null;
@@ -470,7 +454,10 @@
       $("welcome")?.remove();
 
       const message = document.createElement("div");
-      message.className = `message ${role}-message`;
+      message.className =
+        role === "user"
+          ? "message user"
+          : "message assistant";
 
       const bubble = document.createElement("div");
       bubble.className = "message-content";
@@ -492,7 +479,6 @@
       elements.messages.appendChild(message);
 
       scrollToBottom();
-
       return message;
     }
 
@@ -503,20 +489,16 @@
         <div class="welcome" id="welcome">
           <h1>How can I help you today?</h1>
           <p>Ask anything. Let's explore together.</p>
-
           <div class="suggestion-grid">
             <button type="button" class="suggestion">
               Explain a difficult topic
             </button>
-
             <button type="button" class="suggestion">
               Help me write something
             </button>
-
             <button type="button" class="suggestion">
               Solve a problem
             </button>
-
             <button type="button" class="suggestion">
               Give me creative ideas
             </button>
@@ -529,7 +511,6 @@
         .forEach(button => {
           button.addEventListener("click", () => {
             if (!elements.input) return;
-
             elements.input.value = button.textContent.trim();
             elements.input.focus();
           });
@@ -541,7 +522,7 @@
 
       const thinking = document.createElement("div");
       thinking.id = "myai-thinking";
-      thinking.className = "message assistant-message";
+      thinking.className = "message assistant";
 
       const bubble = document.createElement("div");
       bubble.className = "message-content";
@@ -565,9 +546,7 @@
       });
     }
 
-    /* =====================================
-       HISTORY
-    ===================================== */
+    /* HISTORY */
 
     function createHistoryInterface() {
       if (!elements.newChat || $("myai-history")) return;
@@ -583,7 +562,6 @@
             Clear all
           </button>
         </div>
-
         <div id="myai-history-list"></div>
       `;
 
@@ -637,20 +615,22 @@
       }
 
       const conversations = await getConversations();
-
       list.innerHTML = "";
 
       conversations.forEach(conversation => {
         const item = document.createElement("div");
-        item.className = "history-item";
+
+        /* Correct class names matching CSS */
+        item.className = "myai-history-item";
         item.dataset.chatId = conversation.id;
 
         const title = document.createElement("span");
-        title.className = "history-title";
+        title.className = "myai-history-title";
         title.textContent = conversation.title || "New chat";
 
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";
+        deleteButton.className = "myai-history-delete";
         deleteButton.textContent = "×";
         deleteButton.title = "Delete conversation";
         deleteButton.dataset.deleteChat = conversation.id;
@@ -692,14 +672,11 @@
       clearImagePreview();
       showWelcome();
       closeSidebar();
-
       await renderConversationList();
       elements.input?.focus();
     }
 
-    /* =====================================
-       SIDEBAR
-    ===================================== */
+    /* SIDEBAR */
 
     function openSidebar() {
       elements.sidebar?.classList.add("sidebar-open");
@@ -716,6 +693,7 @@
     elements.openSidebar?.addEventListener("click", openSidebar);
     elements.closeSidebar?.addEventListener("click", closeSidebar);
     elements.overlay?.addEventListener("click", closeSidebar);
+    elements.newChat?.addEventListener("click", startNewChat);
 
     document.addEventListener("keydown", event => {
       if (event.key === "Escape") {
@@ -724,14 +702,11 @@
       }
     });
 
-    elements.newChat?.addEventListener("click", startNewChat);
-
     elements.settings?.addEventListener("click", () => {
       closeSidebar();
 
       if (elements.voicePanel) {
         elements.voicePanel.hidden = false;
-
         elements.voicePanel.scrollIntoView({
           behavior: "smooth",
           block: "center"
@@ -754,34 +729,19 @@
       }
     });
 
-    /* =====================================
-       IMAGE UPLOAD
-    ===================================== */
+    /* IMAGE UPLOAD */
 
     function clearImagePreview() {
       pendingImage = null;
 
-      if (elements.imageInput) {
-        elements.imageInput.value = "";
-      }
-
-      if (elements.previewImg) {
-        elements.previewImg.src = "";
-      }
-
-      if (elements.imagePreview) {
-        elements.imagePreview.hidden = true;
-      }
+      if (elements.imageInput) elements.imageInput.value = "";
+      if (elements.previewImg) elements.previewImg.src = "";
+      if (elements.imagePreview) elements.imagePreview.hidden = true;
     }
 
     function showImagePreview(dataUrl) {
-      if (elements.previewImg) {
-        elements.previewImg.src = dataUrl;
-      }
-
-      if (elements.imagePreview) {
-        elements.imagePreview.hidden = false;
-      }
+      if (elements.previewImg) elements.previewImg.src = dataUrl;
+      if (elements.imagePreview) elements.imagePreview.hidden = false;
     }
 
     function compressImage(file) {
@@ -813,10 +773,7 @@
             const context = canvas.getContext("2d");
             context.drawImage(image, 0, 0, width, height);
 
-            const dataUrl = canvas.toDataURL(
-              "image/jpeg",
-              0.75
-            );
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
 
             resolve({
               preview: dataUrl,
@@ -864,22 +821,13 @@
       }
     });
 
-    elements.removeImage?.addEventListener(
-      "click",
-      clearImagePreview
-    );
+    elements.removeImage?.addEventListener("click", clearImagePreview);
 
-    /* =====================================
-       VOICE OUTPUT
-    ===================================== */
+    /* VOICE OUTPUT */
 
     function detectLanguage(text) {
       if (/[\u0600-\u06FF]/.test(text)) return "ar-SA";
-
-      if (/[àâçéèêëîïôûùüÿœ]/i.test(text)) {
-        return "fr-FR";
-      }
-
+      if (/[àâçéèêëîïôûùüÿœ]/i.test(text)) return "fr-FR";
       return getVoiceLanguage();
     }
 
@@ -907,11 +855,9 @@
         if (voice) utterance.voice = voice;
       } else {
         const language = utterance.lang.split("-")[0];
-
         const voice = voices.find(v =>
           v.lang.toLowerCase().startsWith(language.toLowerCase())
         );
-
         if (voice) utterance.voice = voice;
       }
 
@@ -919,9 +865,7 @@
     }
 
     function loadVoices() {
-      if (!elements.voiceChoice || !("speechSynthesis" in window)) {
-        return;
-      }
+      if (!elements.voiceChoice || !("speechSynthesis" in window)) return;
 
       const voices = window.speechSynthesis.getVoices();
       const previous = elements.voiceChoice.value;
@@ -933,13 +877,10 @@
         const option = document.createElement("option");
         option.value = voice.name;
         option.textContent = `${voice.name} (${voice.lang})`;
-
         elements.voiceChoice.appendChild(option);
       });
 
-      if (previous) {
-        elements.voiceChoice.value = previous;
-      }
+      if (previous) elements.voiceChoice.value = previous;
     }
 
     window.speechSynthesis?.addEventListener?.(
@@ -949,12 +890,8 @@
 
     elements.voiceOutput?.addEventListener("click", () => {
       autoSpeak = !autoSpeak;
-
       elements.voiceOutput.classList.toggle("active", autoSpeak);
-      elements.voiceOutput.setAttribute(
-        "aria-pressed",
-        String(autoSpeak)
-      );
+      elements.voiceOutput.setAttribute("aria-pressed", String(autoSpeak));
 
       setStatus(
         autoSpeak
@@ -974,9 +911,7 @@
       speakText("Hello! This is the MY AI voice preview.");
     });
 
-    /* =====================================
-       VOICE INPUT
-    ===================================== */
+    /* VOICE INPUT */
 
     function initializeRecognition() {
       const SpeechRecognition =
@@ -989,7 +924,6 @@
       }
 
       const instance = new SpeechRecognition();
-
       instance.lang = getVoiceLanguage();
       instance.continuous = false;
       instance.interimResults = true;
@@ -999,7 +933,6 @@
       instance.onstart = () => {
         isListening = true;
         finalTranscript = "";
-
         setStatus("Listening...");
         elements.voiceInput?.classList.add("active");
       };
@@ -1018,8 +951,7 @@
         }
 
         if (elements.input) {
-          elements.input.value =
-            finalTranscript + interimText;
+          elements.input.value = finalTranscript + interimText;
         }
       };
 
@@ -1030,7 +962,6 @@
 
       instance.onend = () => {
         isListening = false;
-
         elements.voiceInput?.classList.remove("active");
         setStatus("Voice input stopped.");
       };
@@ -1061,9 +992,7 @@
       }
     });
 
-    /* =====================================
-       GEMINI CHAT
-    ===================================== */
+    /* GEMINI CHAT */
 
     function getModelHistory() {
       if (!activeConversation?.messages) return [];
@@ -1080,12 +1009,9 @@
       if (isSending) return;
 
       const messageText = elements.input?.value.trim() || "";
-
       if (!messageText && !pendingImage) return;
 
-      if (!currentSession) {
-        await getSession();
-      }
+      if (!currentSession) await getSession();
 
       if (!currentSession) {
         showError("Please sign in with Google before sending a message.");
@@ -1111,14 +1037,9 @@
 
       try {
         await ensureActiveConversation(messageText || "Image");
-
         await storeMessage(userMessage);
 
-        addMessage(
-          "user",
-          messageText,
-          imageToSend?.preview || null
-        );
+        addMessage("user", messageText, imageToSend?.preview || null);
 
         if (elements.input) elements.input.value = "";
 
@@ -1129,16 +1050,13 @@
 
         const response = await fetch("/api/chat", {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${currentSession.access_token}`
           },
-
           body: JSON.stringify({
             message: messageText,
             history,
-
             image: imageToSend
               ? {
                   mimeType: imageToSend.mimeType,
@@ -1164,17 +1082,13 @@
           );
         }
 
-        const reply =
-          result.reply ||
-          result.response ||
-          result.text;
+        const reply = result.reply || result.response || result.text;
 
         if (!reply) {
           throw new Error("The AI returned an empty response.");
         }
 
         removeThinking();
-
         userMessage.sentToModel = true;
 
         const assistantMessage = {
@@ -1187,19 +1101,15 @@
         await storeMessage(assistantMessage);
 
         const assistantElement = addMessage("assistant", reply);
-
         renderMath(assistantElement);
 
         await saveConversation(activeConversation);
         await renderConversationList();
 
-        if (autoSpeak) {
-          speakText(reply);
-        }
+        if (autoSpeak) speakText(reply);
 
       } catch (error) {
         console.error("Send message error:", error);
-
         removeThinking();
 
         addMessage(
@@ -1213,17 +1123,13 @@
 
       } finally {
         isSending = false;
-
         if (elements.send) elements.send.disabled = false;
         if (elements.input) elements.input.disabled = false;
-
         elements.input?.focus();
       }
     }
 
-    /* =====================================
-       FORM EVENTS
-    ===================================== */
+    /* FORM EVENTS */
 
     elements.form?.addEventListener("submit", event => {
       event.preventDefault();
@@ -1246,16 +1152,12 @@
       }
     });
 
-    /* =====================================
-       AUTH EVENTS
-    ===================================== */
+    /* AUTH EVENTS */
 
     elements.login?.addEventListener("click", loginWithGoogle);
     elements.logout?.addEventListener("click", logout);
 
-    /* =====================================
-       START
-    ===================================== */
+    /* START */
 
     async function start() {
       closeSidebar();
