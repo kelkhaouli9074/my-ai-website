@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,10 +13,8 @@
 
   <link rel="stylesheet" href="/style.css">
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- MathJax configuration -->
   <script>
     window.MathJax = {
       tex: {
@@ -27,6 +24,11 @@
       startup: {
         typeset: false
       }
+    };
+
+    // Temporary button test
+    window.testMYAIButton = function () {
+      alert("BUTTON WORKS");
     };
   </script>
 
@@ -38,7 +40,6 @@
 
 <div class="app">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="main-sidebar">
 
     <div class="brand">
@@ -47,7 +48,7 @@
       <button id="close-sidebar" class="sidebar-close" type="button">×</button>
     </div>
 
-    <button id="new-chat-btn" class="new-chat-btn" type="button">
+    <button id="new-chat-btn" class="new-chat-btn" type="button" onclick="testMYAIButton()">
       <span>＋</span>
       <span>New chat</span>
     </button>
@@ -83,10 +84,8 @@
 
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-  <!-- MAIN -->
   <main class="main">
 
-    <!-- TOPBAR -->
     <header class="topbar">
 
       <button id="open-sidebar" class="menu-toggle" type="button">☰</button>
@@ -118,7 +117,6 @@
 
     </header>
 
-    <!-- CHAT MESSAGES -->
     <section class="chat-messages" id="chat-messages">
 
       <div class="welcome" id="welcome">
@@ -143,53 +141,41 @@
 
           <button class="suggestion" type="button"
             data-prompt="Explain a difficult scientific concept simply.">
-
             <span class="suggestion-icon">◈</span>
-
             <span class="suggestion-copy">
               <strong>Learn something</strong>
               <small>Understand difficult concepts</small>
             </span>
-
             <span class="suggestion-arrow">↗</span>
           </button>
 
           <button class="suggestion" type="button"
             data-prompt="Help me solve a mathematics problem step by step.">
-
             <span class="suggestion-icon">∑</span>
-
             <span class="suggestion-copy">
               <strong>Mathematics</strong>
               <small>Equations and calculations</small>
             </span>
-
             <span class="suggestion-arrow">↗</span>
           </button>
 
           <button class="suggestion" type="button"
             data-prompt="Give me creative ideas for a new project.">
-
             <span class="suggestion-icon">✧</span>
-
             <span class="suggestion-copy">
               <strong>Explore ideas</strong>
               <small>Discover new possibilities</small>
             </span>
-
             <span class="suggestion-arrow">↗</span>
           </button>
 
           <button class="suggestion" type="button"
             data-prompt="Help me write and improve some code.">
-
             <span class="suggestion-icon">⌘</span>
-
             <span class="suggestion-copy">
               <strong>Write code</strong>
               <small>Build and improve projects</small>
             </span>
-
             <span class="suggestion-arrow">↗</span>
           </button>
 
@@ -198,10 +184,8 @@
 
     </section>
 
-    <!-- COMPOSER -->
     <footer class="composer-area">
 
-      <!-- VOICE SETTINGS -->
       <div class="voice-settings-wrap">
 
         <button
@@ -209,9 +193,7 @@
           class="voice-settings-toggle"
           type="button"
           aria-expanded="false">
-
           ⚙ Voice settings
-
         </button>
 
         <div id="voice-settings-panel" class="voice-panel" hidden>
@@ -224,9 +206,7 @@
           <div class="voice-fields">
 
             <div class="voice-field">
-
               <label for="voice-language">Language</label>
-
               <select id="voice-language">
                 <option value="auto">Automatic</option>
                 <option value="darija">Moroccan Darija</option>
@@ -235,17 +215,13 @@
                 <option value="fr">French</option>
                 <option value="es">Spanish</option>
               </select>
-
             </div>
 
             <div class="voice-field">
-
               <label for="voice-choice">Voice</label>
-
               <select id="voice-choice">
                 <option value="default">Automatic</option>
               </select>
-
             </div>
 
           </div>
@@ -260,23 +236,11 @@
 
       <div id="voice-status" class="voice-status"></div>
 
-      <!-- CHAT FORM -->
-      <form
-        id="chat-form"
-        class="composer"
-        onsubmit="event.preventDefault();">
+      <form id="chat-form" class="composer">
 
         <div id="image-preview" class="image-preview" hidden>
-
           <img id="preview-img" alt="Image preview">
-
-          <button
-            id="remove-image"
-            type="button"
-            aria-label="Remove image">
-            ×
-          </button>
-
+          <button id="remove-image" type="button" aria-label="Remove image">×</button>
         </div>
 
         <input
@@ -286,11 +250,7 @@
           hidden
         >
 
-        <button
-          id="attach-btn"
-          class="composer-tool"
-          type="button"
-          title="Attach image">
+        <button id="attach-btn" class="composer-tool" type="button" title="Attach image">
           ＋
         </button>
 
@@ -300,33 +260,19 @@
           rows="1"
         ></textarea>
 
-        <button
-          id="voice-input-btn"
-          class="composer-tool"
-          type="button"
-          title="Speak">
+        <button id="voice-input-btn" class="composer-tool" type="button" title="Speak">
           🎙
         </button>
 
-        <button
-          id="voice-output-btn"
-          class="composer-tool"
-          type="button">
+        <button id="voice-output-btn" class="composer-tool" type="button">
           🔊 Voice off
         </button>
 
-        <button
-          id="stop-voice-btn"
-          class="composer-tool"
-          type="button"
-          hidden>
+        <button id="stop-voice-btn" class="composer-tool" type="button" hidden>
           ■
         </button>
 
-        <button
-          id="send-btn"
-          type="submit"
-          title="Send message">
+        <button id="send-btn" type="submit" title="Send message">
           ➤
         </button>
 
@@ -342,17 +288,11 @@
 
 </div>
 
-<!-- ABOUT MODAL -->
 <div id="about-modal" class="custom-modal" hidden>
 
   <div class="modal-card">
 
-    <button
-      id="close-about"
-      class="modal-close"
-      type="button">
-      ×
-    </button>
+    <button id="close-about" class="modal-close" type="button">×</button>
 
     <div class="modal-logo">M</div>
 
