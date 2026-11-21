@@ -77,6 +77,59 @@
       display: none;
     }
 
+    /* VOICE CONTROLS */
+
+    .voice-controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .voice-btn {
+      background: #17243a;
+      color: #eaf2ff;
+      border: 1px solid #304361;
+      border-radius: 10px;
+      padding: 9px 13px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: .2s;
+    }
+
+    .voice-btn:hover {
+      background: #243a59;
+    }
+
+    .voice-btn.active {
+      background: #174c40;
+      border-color: #2c9b78;
+    }
+
+    .voice-btn.listening {
+      background: #662b37;
+      border-color: #d45a70;
+      animation: voicePulse 1.2s infinite;
+    }
+
+    .voice-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    #voice-status {
+      color: #91a0b8;
+      font-size: 12px;
+      min-height: 17px;
+    }
+
+    @keyframes voicePulse {
+      50% {
+        box-shadow: 0 0 0 5px rgba(212,90,112,.12);
+      }
+    }
+
     @media(max-width: 600px) {
       .topbar {
         flex-wrap: wrap;
@@ -214,6 +267,39 @@
       </section>
 
       <footer class="composer-area">
+
+        <div class="voice-controls">
+
+          <button
+            type="button"
+            id="voice-input-btn"
+            class="voice-btn"
+            title="Speak to MY AI"
+          >
+            🎙️ Speak
+          </button>
+
+          <button
+            type="button"
+            id="voice-output-btn"
+            class="voice-btn"
+            title="Automatically read MY AI answers"
+          >
+            🔊 Voice off
+          </button>
+
+          <button
+            type="button"
+            id="stop-voice-btn"
+            class="voice-btn"
+            hidden
+          >
+            ⏹ Stop
+          </button>
+
+          <span id="voice-status" aria-live="polite"></span>
+
+        </div>
 
         <form id="chat-form" class="composer">
 
