@@ -1,23 +1,23 @@
 CSS
 
 /* =========================================
-   MY AI — MATTE BLACK & DUSTY BLUE
+   MY AI — MATTE BLACK / SLATE / DUSTY BLUE
 ========================================= */
 
 :root {
-  --bg: #090d13;
-  --sidebar: #0d131c;
-  --panel: #131c27;
-  --panel-2: #192431;
-  --panel-3: #202e3d;
-  --line: #29394a;
+  --bg: #0b1017;
+  --sidebar: #101721;
+  --panel: #19232f;
+  --panel-2: #202d3b;
+  --panel-3: #29394a;
+  --line: #405469;
 
-  --text: #e5edf5;
-  --muted: #a0afbf;
-  --subtle: #718397;
+  --text: #e8eef5;
+  --muted: #b0bdca;
+  --subtle: #8e9eae;
 
   --purple: #829bb5;
-  --purple-light: #a9bfd5;
+  --purple-light: #b5c9dc;
   --purple-dark: #617d99;
   --glow: rgba(130, 155, 181, .12);
 
@@ -34,10 +34,10 @@ body {
   width: 100%;
   min-height: 100%;
   margin: 0;
+  background: #0b1017;
 }
 
 body {
-  background: var(--bg);
   color: var(--text);
   font-family: Inter, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
@@ -125,17 +125,17 @@ select:focus-visible {
   align-items: center;
   gap: 11px;
   padding: 0 15px;
-  border: 1px solid #3b526a;
+  border: 1px solid #50677e;
   border-radius: 12px;
-  background: #182331;
-  color: #dce8f4;
+  background: #202d3b;
+  color: #e3edf6;
   font-weight: 650;
   transition: var(--transition);
 }
 
 .new-chat-btn:hover {
-  background: #25374a;
-  border-color: var(--purple);
+  background: #2a3b4d;
+  border-color: #8ba5bf;
 }
 
 .plus {
@@ -151,7 +151,7 @@ select:focus-visible {
 .sidebar-label {
   margin-bottom: 16px;
   color: var(--subtle);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.8px;
 }
@@ -160,7 +160,7 @@ select:focus-visible {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #dce7f2;
+  color: #e1e9f1;
   font-size: 13px;
   font-weight: 600;
 }
@@ -176,7 +176,7 @@ select:focus-visible {
 
 .sidebar-caption {
   margin: 9px 0 0 16px;
-  color: var(--subtle);
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -198,7 +198,7 @@ select:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 11px;
-  background: #202e3d;
+  background: #29394a;
   color: var(--purple-light);
   font-size: 19px;
 }
@@ -215,7 +215,7 @@ select:focus-visible {
 .sidebar-footer span {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 /* MAIN */
@@ -227,10 +227,7 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   position: relative;
-  background:
-    radial-gradient(ellipse at 50% 35%,
-      rgba(80, 110, 145, .07), transparent 55%),
-    var(--bg);
+  background: #0b1017;
 }
 
 /* TOPBAR */
@@ -243,7 +240,7 @@ select:focus-visible {
   justify-content: space-between;
   gap: 15px;
   padding: 0 28px;
-  background: #0d131c;
+  background: #101721;
   border-bottom: 1px solid var(--line);
 }
 
@@ -270,9 +267,9 @@ select:focus-visible {
 
 #credits-display {
   padding: 8px 12px;
-  border: 1px solid #34485d;
+  border: 1px solid #405469;
   border-radius: 9px;
-  background: #182331;
+  background: #19232f;
   color: var(--purple-light);
   font-size: 12px;
   font-weight: 700;
@@ -283,10 +280,10 @@ select:focus-visible {
 #google-logout {
   min-height: 35px;
   padding: 0 13px;
-  border: 1px solid #40566d;
+  border: 1px solid #50677e;
   border-radius: 9px;
-  background: #1a2735;
-  color: #e1eaf3;
+  background: #202d3b;
+  color: #e3edf6;
   font-size: 12px;
   font-weight: 650;
   transition: var(--transition);
@@ -294,8 +291,8 @@ select:focus-visible {
 
 #google-login:hover,
 #google-logout:hover {
-  border-color: var(--purple);
-  background: #25374a;
+  border-color: #8ba5bf;
+  background: #2a3b4d;
 }
 
 #account-email {
@@ -314,18 +311,22 @@ select:focus-visible {
   min-height: 0;
   overflow-y: auto;
   padding: 38px 24px 28px;
-  background: transparent;
+  background: #111923;
   scrollbar-width: thin;
-  scrollbar-color: #40566d transparent;
+  scrollbar-color: #536b83 #111923;
 }
 
 .chat-messages::-webkit-scrollbar {
-  width: 6px;
+  width: 7px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #111923;
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
   border-radius: 10px;
-  background: #40566d;
+  background: #536b83;
 }
 
 /* WELCOME */
@@ -344,8 +345,8 @@ select:focus-visible {
   margin: 0 auto 23px;
   border: 1px solid #536c86;
   border-radius: 27px;
-  background: radial-gradient(circle, #26394d, #101923);
-  box-shadow: 0 0 30px rgba(130, 155, 181, .12);
+  background: #202d3b;
+  box-shadow: 0 0 25px rgba(130, 155, 181, .10);
   transform: rotate(-5deg);
 }
 
@@ -395,7 +396,7 @@ select:focus-visible {
 .welcome p {
   max-width: 510px;
   margin: 0 auto;
-  color: var(--muted);
+  color: #b0bdca;
   font-size: 14px;
   line-height: 1.8;
 }
@@ -417,15 +418,15 @@ select:focus-visible {
   align-items: center;
   gap: 12px;
   padding: 13px;
-  border: 1px solid var(--line);
+  border: 1px solid #405469;
   border-radius: 13px;
-  background: linear-gradient(135deg, #17212d, #101721);
+  background: #19232f;
   transition: var(--transition);
 }
 
 .suggestion:hover {
-  border-color: #718ba7;
-  background: #202e3d;
+  border-color: #8ba5bf;
+  background: #253443;
   transform: translateY(-2px);
 }
 
@@ -458,8 +459,8 @@ select:focus-visible {
 
 .suggestion-copy small {
   margin-top: 5px;
-  color: var(--muted);
-  font-size: 10px;
+  color: #a1b0c0;
+  font-size: 11px;
 }
 
 .suggestion-arrow {
@@ -486,7 +487,7 @@ select:focus-visible {
   margin-right: max(0px, calc((100% - 850px) / 2));
   margin-left: auto;
   background: #26394d;
-  border: 1px solid #415b75;
+  border: 1px solid #50677e;
   color: #f0f5fa;
   border-bottom-right-radius: 5px;
 }
@@ -494,8 +495,8 @@ select:focus-visible {
 .message.assistant {
   margin-left: auto;
   margin-right: auto;
-  background: #131c27;
-  border: 1px solid #29394a;
+  background: #19232f;
+  border: 1px solid #405469;
   border-bottom-left-radius: 5px;
 }
 
@@ -511,7 +512,7 @@ select:focus-visible {
 .message h2,
 .message h3,
 .message h4 {
-  color: #b9cde0;
+  color: #c2d4e6;
   line-height: 1.35;
 }
 
@@ -523,9 +524,9 @@ select:focus-visible {
   max-width: 100%;
   overflow-x: auto;
   padding: 15px;
-  border: 1px solid #34485d;
+  border: 1px solid #405469;
   border-radius: 10px;
-  background: #090d13;
+  background: #0b1017;
   color: #e5edf5;
 }
 
@@ -547,18 +548,18 @@ select:focus-visible {
 .message th,
 .message td {
   padding: 8px 11px;
-  border: 1px solid #3b4c60;
+  border: 1px solid #405469;
 }
 
 .message th {
-  background: #202e3d;
+  background: #29394a;
 }
 
 .message blockquote {
   margin: 12px 0;
   padding: 9px 14px;
-  border-left: 3px solid var(--purple);
-  background: #1a2735;
+  border-left: 3px solid #829bb5;
+  background: #202d3b;
   color: #c1d0df;
 }
 
@@ -567,7 +568,7 @@ select:focus-visible {
 .composer-area {
   flex-shrink: 0;
   padding: 12px 24px 14px;
-  background: linear-gradient(to top, #090d13 80%, transparent);
+  background: #0b1017;
 }
 
 .composer {
@@ -578,16 +579,16 @@ select:focus-visible {
   gap: 10px;
   margin: 0 auto;
   padding: 10px 11px;
-  border: 1px solid #34485d;
+  border: 1px solid #50677e;
   border-radius: 17px;
-  background: #151e29;
-  box-shadow: 0 8px 35px rgba(0, 0, 0, .3);
+  background: #19232f;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .25);
   transition: var(--transition);
 }
 
 .composer:focus-within {
-  border-color: #829bb5;
-  box-shadow: 0 0 0 3px rgba(130, 155, 181, .08);
+  border-color: #a9bfd5;
+  box-shadow: 0 0 0 3px rgba(130, 155, 181, .10);
 }
 
 #message-input {
@@ -606,7 +607,7 @@ select:focus-visible {
 }
 
 #message-input::placeholder {
-  color: #899bad;
+  color: #a1b0c0;
 }
 
 .composer-tool {
@@ -625,7 +626,7 @@ select:focus-visible {
 
 .composer-tool:hover {
   border-color: #536c86;
-  background: #26394d;
+  background: #29394a;
   color: white;
 }
 
@@ -677,7 +678,7 @@ select:focus-visible {
   height: 25px;
   border: 1px solid #536c86;
   border-radius: 50%;
-  background: #202e3d;
+  background: #29394a;
   color: white;
   font-size: 17px;
 }
@@ -692,12 +693,12 @@ select:focus-visible {
   justify-content: space-between;
   gap: 10px;
   margin: 10px auto 0;
-  color: #77899b;
-  font-size: 10px;
+  color: #a1b0c0;
+  font-size: 11px;
 }
 
 .composer-brand {
-  color: #a9bfd5;
+  color: #b5c9dc;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -720,16 +721,16 @@ select:focus-visible {
   align-items: center;
   gap: 8px;
   padding: 8px 11px;
-  border: 1px solid #34485d;
+  border: 1px solid #405469;
   border-radius: 9px;
-  background: #131c27;
-  color: #b9cde0;
+  background: #19232f;
+  color: #c1d0df;
   font-size: 11px;
   transition: var(--transition);
 }
 
 .voice-settings-toggle:hover {
-  border-color: #829bb5;
+  border-color: #a9bfd5;
   color: var(--purple-light);
 }
 
@@ -742,9 +743,9 @@ select:focus-visible {
   width: 100%;
   margin-bottom: 10px;
   padding: 18px;
-  border: 1px solid #40566d;
+  border: 1px solid #50677e;
   border-radius: 15px;
-  background: #131c27;
+  background: #19232f;
   box-shadow: 0 12px 35px rgba(0, 0, 0, .4);
 }
 
@@ -792,7 +793,7 @@ select:focus-visible {
   display: block;
   margin-bottom: 8px;
   color: #c1d0df;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
 }
 
@@ -800,15 +801,15 @@ select:focus-visible {
   width: 100%;
   height: 41px;
   padding: 0 11px;
-  border: 1px solid #3c5065;
+  border: 1px solid #50677e;
   border-radius: 9px;
-  background: #0d131c;
+  background: #111923;
   color: #e5edf5;
   font-size: 12px;
 }
 
 .voice-field select option {
-  background: #131c27;
+  background: #19232f;
   color: white;
 }
 
@@ -822,23 +823,23 @@ select:focus-visible {
 .voice-btn {
   min-height: 35px;
   padding: 0 12px;
-  border: 1px solid #40566d;
+  border: 1px solid #50677e;
   border-radius: 9px;
-  background: #202e3d;
+  background: #29394a;
   color: #e1eaf3;
   font-size: 11px;
   transition: var(--transition);
 }
 
 .voice-btn:hover {
-  border-color: #829bb5;
-  background: #2a3c50;
+  border-color: #a9bfd5;
+  background: #354b61;
 }
 
 .voice-note {
   margin: 13px 0 0;
-  color: #8394a5;
-  font-size: 10px;
+  color: #a1b0c0;
+  font-size: 11px;
 }
 
 .voice-status {
@@ -860,7 +861,6 @@ select {
 input:not([type="file"]),
 textarea,
 select {
-  background-color: #151e29;
   color: var(--text);
 }
 
@@ -989,7 +989,7 @@ select {
   }
 
   .suggestion-copy small {
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .suggestion-arrow {
