@@ -39,9 +39,22 @@ const logoutButton = document.getElementById("google-logout");
 const creditsDisplay = document.getElementById("credits-display");
 const accountEmail = document.getElementById("account-email");
 
+/* VOICE ELEMENTS */
+
+const voiceInputBtn = document.getElementById("voice-input-btn");
+const voiceOutputBtn = document.getElementById("voice-output-btn");
+const stopVoiceBtn = document.getElementById("stop-voice-btn");
+const voiceStatus = document.getElementById("voice-status");
+
+
 let history = [];
 let selectedImage = null;
 let currentSession = null;
+
+let autoSpeak = false;
+let speakNextResponse = false;
+let recognition = null;
+let isListening = false;
 
 
 /* =====================================
@@ -140,6 +153,7 @@ logoutButton.addEventListener("click", async () => {
     if (error) throw error;
 
     history = [];
+    stopSpeaking();
     await updateAccount(null);
 
   } catch (error) {
@@ -208,6 +222,225 @@ async function renderMath(element) {
     console.error("MathJax error:", error);
   }
 }
+
+
+/* =====================================
+   VOICE — TEXT TO SPEECH
+===================================== */
+
+function cleanTextForSpeech(text) {
+  return text
+    .replace(/```[\s\S]*?```/g, " كود برمجي ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\$\$[\s\S]*?\$\$/g, " ")
+    .replace(/\$[^$]*\$/g, " ")
+    .replace(/https?:\/\/\S+/g, " رابط ")
+    .replace(/[#*_~>|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
+function speakText(text) {
+  if (!("speechSynthesis" in window)) {
+    voiceStatus.textContent =
+      "Your browser does not support voice playback.";
+    return;
+  }
+
+  stopSpeaking();
+
+  const cleanText = cleanTextForSpeech(text);
+
+  if (!cleanText) return;
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+
+  utterance.lang = "ar-MA";
+  utterance.rate = 0.95;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+
+  const arabicVoice = voices.find(voice =>
+    voice.lang.toLowerCase() === "ar-ma"
+  ) || voices.find(voice =>
+    voice.lang.toLowerCase().startsWith("ar")
+  );
+
+  if (arabicVoice) {
+    utterance.voice = arabicVoice;
+  }
+
+  utterance.onstart = () => {
+    voiceStatus.textContent = "MY AI is speaking...";
+    stopVoiceBtn.hidden = false;
+  };
+
+  utterance.onend = () => {
+    voiceStatus.textContent = "";
+    stopVoiceBtn.hidden = true;
+  };
+
+  utterance.onerror = (event) => {
+    console.error("Speech error:", event.error);
+    voiceStatus.textContent = "Voice playback unavailable.";
+    stopVoiceBtn.hidden = true;
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+
+function stopSpeaking() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  stopVoiceBtn.hidden = true;
+}
+
+
+/* =====================================
+   VOICE — SPEECH TO TEXT
+===================================== */
+
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+
+  recognition.lang = "ar-MA";
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isListening = true;
+
+    voiceInputBtn.classList.add("listening");
+    voiceInputBtn.textContent = "🔴 Listening...";
+    voiceStatus.textContent = "Speak now...";
+  };
+
+  recognition.onresult = (event) => {
+    let finalTranscript = "";
+    let interimTranscript = "";
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript;
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+
+    if (finalTranscript) {
+      input.value = (
+        input.value + " " + finalTranscript
+      ).trim();
+
+      input.style.height = "auto";
+      input.style.height =
+        Math.min(input.scrollHeight, 150) + "px";
+    } else if (interimTranscript) {
+      voiceStatus.textContent =
+        "Hearing: " + interimTranscript;
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Recognition error:", event.error);
+
+    if (event.error === "not-allowed") {
+      voiceStatus.textContent =
+        "Please allow microphone access.";
+    } else if (event.error === "no-speech") {
+      voiceStatus.textContent = "No speech detected.";
+    } else {
+      voiceStatus.textContent =
+        "Voice recognition error: " + event.error;
+    }
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+
+    voiceInputBtn.classList.remove("listening");
+    voiceInputBtn.textContent = "🎙️ Speak";
+
+    const spokenText = input.value.trim();
+
+    if (spokenText) {
+      voiceStatus.textContent = "Sending your message...";
+
+      speakNextResponse = true;
+      sendMessage({ speakReply: true });
+
+    } else {
+      voiceStatus.textContent = "";
+    }
+  };
+
+} else {
+  voiceInputBtn.disabled = true;
+  voiceInputBtn.title = "Speech recognition is not supported.";
+
+  voiceStatus.textContent =
+    "Voice input is not supported in this browser.";
+}
+
+
+/* =====================================
+   VOICE BUTTONS
+===================================== */
+
+voiceInputBtn.addEventListener("click", () => {
+  if (!recognition) {
+    alert(
+      "Voice recognition is not supported in this browser. Try Chrome."
+    );
+    return;
+  }
+
+  if (isListening) {
+    recognition.stop();
+    return;
+  }
+
+  stopSpeaking();
+
+  try {
+    recognition.start();
+  } catch (error) {
+    console.error(error);
+    voiceStatus.textContent =
+      "Could not start microphone. Try again.";
+  }
+});
+
+
+voiceOutputBtn.addEventListener("click", () => {
+  autoSpeak = !autoSpeak;
+
+  voiceOutputBtn.classList.toggle("active", autoSpeak);
+
+  voiceOutputBtn.textContent = autoSpeak
+    ? "🔊 Voice on"
+    : "🔊 Voice off";
+
+  voiceStatus.textContent = autoSpeak
+    ? "Automatic voice playback enabled."
+    : "Automatic voice playback disabled.";
+});
+
+
+stopVoiceBtn.addEventListener("click", stopSpeaking);
 
 
 /* =====================================
@@ -339,7 +572,7 @@ removeImageBtn.addEventListener("click", clearImage);
    SEND MESSAGE
 ===================================== */
 
-async function sendMessage() {
+async function sendMessage({ speakReply = false } = {}) {
   const text = input.value.trim();
 
   if ((!text && !selectedImage) || sendBtn.disabled) {
@@ -380,6 +613,7 @@ async function sendMessage() {
   input.disabled = true;
   sendBtn.disabled = true;
   attachBtn.disabled = true;
+  voiceInputBtn.disabled = true;
 
   const loading = addMessage("Thinking...", "assistant");
 
@@ -424,14 +658,21 @@ async function sendMessage() {
       { role: "assistant", content: data.reply }
     );
 
+    if (speakReply || autoSpeak || speakNextResponse) {
+      speakText(data.reply);
+    }
+
   } catch (error) {
     loading.textContent =
       "Connection error: " + error.message;
 
   } finally {
+    speakNextResponse = false;
+
     input.disabled = false;
     sendBtn.disabled = false;
     attachBtn.disabled = false;
+    voiceInputBtn.disabled = !recognition;
 
     input.focus();
     messages.scrollTop = messages.scrollHeight;
@@ -471,6 +712,12 @@ input.addEventListener("keydown", event => {
 
 newChatBtn.addEventListener("click", () => {
   history = [];
+
+  stopSpeaking();
+
+  if (isListening && recognition) {
+    recognition.stop();
+  }
 
   clearImage();
 
