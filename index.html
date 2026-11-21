@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1017">
+
   <title>MY AI — Intelligent Assistant</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,21 +14,28 @@
 
   <link rel="stylesheet" href="/style.css">
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
     window.MathJax = {
       tex: {
-        inlineMath: [['\\(', '\\)'], ['$', '$']],
-        displayMath: [['\\[', '\\]'], ['$$', '$$']]
-      }
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      startup: { typeset: false }
     };
   </script>
+
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script defer src="/app.js"></script>
 </head>
 
 <body>
+
 <div class="app">
 
   <aside class="sidebar" id="main-sidebar">
+
     <div class="brand">
       <div class="brand-icon">M</div>
       <span>MY AI</span>
@@ -35,17 +43,19 @@
     </div>
 
     <button id="new-chat-btn" class="new-chat-btn" type="button">
-      <span class="plus">＋</span>
+      <span>＋</span>
       <span>New chat</span>
     </button>
 
     <div class="sidebar-navigation">
       <button class="sidebar-nav-btn" id="open-settings" type="button">
-        <span>⚙</span><span>Settings</span>
+        <span>⚙</span>
+        <span>Settings</span>
       </button>
 
       <button class="sidebar-nav-btn" id="open-about" type="button">
-        <span>ⓘ</span><span>About Us</span>
+        <span>ⓘ</span>
+        <span>About MY AI</span>
       </button>
     </div>
 
@@ -59,6 +69,7 @@
       </div>
       <span class="profile-arrow">›</span>
     </button>
+
   </aside>
 
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
@@ -66,36 +77,41 @@
   <main class="main">
 
     <header class="topbar">
+
+      <button id="open-sidebar" class="menu-toggle" type="button">☰</button>
+
       <div class="mobile-brand">
-        <button id="open-sidebar" class="menu-toggle" type="button">☰</button>
-        <div class="brand-icon">M</div>
-        <span>MY AI</span>
+        <span class="brand-icon">M</span>
+        <strong>MY AI</strong>
       </div>
 
       <div class="topbar-center">
-        <span class="topbar-indicator"></span>
-        AI Workspace
+        <span class="status-dot"></span>
+        <span>AI Assistant</span>
       </div>
 
       <div class="account-area">
-        <span id="credits-display">Credits: --</span>
-        <button id="google-login" type="button">Sign in with Google</button>
-        <button id="google-logout" type="button" hidden>Logout</button>
         <span id="account-email"></span>
+        <span id="credits-display">Credits: --</span>
+
+        <button id="google-login" class="login-btn" type="button">
+          Sign in with Google
+        </button>
+
+        <button id="google-logout" class="logout-btn" type="button" hidden>
+          Sign out
+        </button>
       </div>
+
     </header>
 
-    <section id="chat-messages" class="chat-messages">
+    <section class="chat-messages" id="chat-messages">
       <div class="welcome" id="welcome">
         <div class="welcome-orb">
           <div class="orb-core">M</div>
         </div>
 
-        <div class="welcome-tag">
-          <span class="tag-line"></span>
-          YOUR PERSONAL AI
-          <span class="tag-line"></span>
-        </div>
+        <div class="welcome-tag">YOUR PERSONAL AI</div>
 
         <h1>Think beyond<br><span>the ordinary.</span></h1>
 
@@ -105,6 +121,7 @@
         </p>
 
         <div class="suggestions">
+
           <button class="suggestion" type="button"
             data-prompt="Explain a difficult scientific concept simply.">
             <span class="suggestion-icon">◈</span>
@@ -144,6 +161,7 @@
             </span>
             <span class="suggestion-arrow">↗</span>
           </button>
+
         </div>
       </div>
     </section>
@@ -151,6 +169,7 @@
     <footer class="composer-area">
 
       <div class="voice-settings-wrap">
+
         <button id="voice-settings-toggle"
           class="voice-settings-toggle"
           type="button"
@@ -159,15 +178,14 @@
         </button>
 
         <div id="voice-settings-panel" class="voice-panel" hidden>
+
           <div class="voice-panel-heading">
-            <div>
-              <strong>Voice Studio</strong>
-              <small>Customize your voice experience</small>
-            </div>
-            <div class="voice-panel-icon">♫</div>
+            <strong>Voice preferences</strong>
+            <span>Customize your experience</span>
           </div>
 
           <div class="voice-fields">
+
             <div class="voice-field">
               <label for="voice-language">Language</label>
               <select id="voice-language">
@@ -183,71 +201,78 @@
             <div class="voice-field">
               <label for="voice-choice">Voice</label>
               <select id="voice-choice">
-                <option value="default">Automatic voice</option>
+                <option value="default">Automatic</option>
               </select>
             </div>
+
           </div>
 
-          <div class="voice-panel-actions">
-            <button id="preview-voice-btn" class="voice-btn" type="button">Preview voice</button>
-            <button id="voice-output-btn" class="voice-btn" type="button">Voice off</button>
-            <button id="stop-voice-btn" class="voice-btn" type="button" hidden>Stop voice</button>
-          </div>
+          <button id="preview-voice-btn" class="voice-btn" type="button">
+            ▶ Preview voice
+          </button>
+
         </div>
+
       </div>
 
-      <div id="voice-status" class="voice-status" aria-live="polite"></div>
+      <div id="voice-status" class="voice-status"></div>
 
-      <div class="composer">
+      <form id="chat-form" class="composer">
+
         <div id="image-preview" class="image-preview" hidden>
-          <img id="preview-img" src="" alt="Selected image">
-          <button id="remove-image" type="button">×</button>
+          <img id="preview-img" alt="Image preview">
+          <button id="remove-image" type="button" aria-label="Remove image">×</button>
         </div>
 
-        <input id="image-input" type="file"
-          accept="image/jpeg,image/png,image/webp" hidden>
+        <input
+          id="image-input"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          hidden
+        >
 
         <button id="attach-btn" class="composer-tool"
-          type="button" aria-label="Attach image">＋</button>
+          type="button" title="Attach image">＋</button>
 
-        <textarea id="message-input" rows="1"
+        <textarea
+          id="message-input"
           placeholder="Message MY AI..."
-          autocomplete="off"></textarea>
+          rows="1"
+        ></textarea>
 
         <button id="voice-input-btn" class="composer-tool"
-          type="button" aria-label="Voice input">🎙</button>
+          type="button" title="Speak">🎙</button>
 
-        <button id="send-btn" type="submit"
-          form="chat-form" aria-label="Send message">➤</button>
-      </div>
+        <button id="voice-output-btn" class="composer-tool"
+          type="button">🔊 Voice off</button>
+
+        <button id="stop-voice-btn" class="composer-tool"
+          type="button" hidden>■</button>
+
+        <button id="send-btn" type="submit" title="Send message">➤</button>
+
+      </form>
 
       <div class="composer-bottom">
-        <span>AI can make mistakes. Check important information.</span>
-        <span class="composer-brand">MY <i>AI</i></span>
+        MY AI can make mistakes. Verify important information.
       </div>
 
-      <form id="chat-form" hidden></form>
     </footer>
 
   </main>
+
 </div>
 
-<!-- ABOUT MODAL -->
 <div id="about-modal" class="custom-modal" hidden>
   <div class="modal-card">
     <button id="close-about" class="modal-close" type="button">×</button>
     <div class="modal-logo">M</div>
     <h2>About MY AI</h2>
-    <p>
-      MY AI is your intelligent assistant, designed to help you
-      learn, explore ideas and get things done.
-    </p>
-    <div class="about-version">MY AI · Intelligent Assistant</div>
+    <p>Your personal intelligent assistant.</p>
+    <p>Designed to help you learn, create and explore.</p>
+    <span class="modal-version">MY AI · Personal Assistant</span>
   </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/app.js"></script>
 
 </body>
 </html>
