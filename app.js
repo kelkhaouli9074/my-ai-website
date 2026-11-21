@@ -1,3 +1,4 @@
+JavaScript
 
 "use strict";
 
@@ -13,16 +14,12 @@
     // =====================================
 
     const SUPABASE_URL = "https://qxmmrlbhgmuhpityezvh.supabase.co";
-
-    // Keep your existing Supabase publishable key here.
-    const SUPABASE_KEY = "PASTE_YOUR_EXISTING_SUPABASE_KEY_HERE";
+    const SUPABASE_KEY = "sb_publishable_a2bgpHM81IQK21ewBAtJsQ_gk2Y6uMK";
 
     const $ = id => document.getElementById(id);
 
     const on = (element, event, callback, options) => {
-      if (element) {
-        element.addEventListener(event, callback, options);
-      }
+      if (element) element.addEventListener(event, callback, options);
     };
 
     const makeId = () =>
@@ -36,15 +33,6 @@
     if (!window.supabase) {
       console.error("MY AI: Supabase SDK is missing.");
       alert("Supabase could not load. Check your internet connection.");
-      return;
-    }
-
-    if (
-      !SUPABASE_KEY ||
-      SUPABASE_KEY === "PASTE_YOUR_EXISTING_SUPABASE_KEY_HERE"
-    ) {
-      console.error("MY AI: Add your existing Supabase publishable key.");
-      alert("Add your Supabase key in app.js first.");
       return;
     }
 
@@ -98,7 +86,6 @@
     const voiceSettingsToggle = $("voice-settings-toggle");
     const voiceSettingsPanel = $("voice-settings-panel");
 
-    // Essential elements
     const missing = [];
 
     if (!form) missing.push("chat-form");
@@ -169,7 +156,6 @@
       }
     });
 
-    // Swipe gestures
     let touchStartX = 0;
     let touchStartY = 0;
 
@@ -302,10 +288,7 @@
 
         request.onsuccess = () => {
           const result = request.result;
-
-          resolve(
-            result && result.ownerId === ownerId ? result : null
-          );
+          resolve(result && result.ownerId === ownerId ? result : null);
         };
 
         request.onerror = () => reject(request.error);
@@ -385,9 +368,7 @@
           try {
             await removeConversation(id, activeOwnerId);
 
-            if (activeConversation?.id === id) {
-              startNewChat();
-            }
+            if (activeConversation?.id === id) startNewChat();
 
             await renderConversationList();
           } catch (error) {
@@ -519,7 +500,6 @@
           </p>
 
           <div class="suggestions">
-
             <button type="button" class="suggestion"
               data-prompt="Explain a difficult scientific concept simply.">
               <span class="suggestion-icon">◈</span>
@@ -559,7 +539,6 @@
               </span>
               <span class="suggestion-arrow">↗</span>
             </button>
-
           </div>
         </div>
       `;
@@ -574,9 +553,7 @@
         return activeConversation;
       }
 
-      if (!activeOwnerId) {
-        throw new Error("Please sign in first.");
-      }
+      if (!activeOwnerId) throw new Error("Please sign in first.");
 
       activeConversation = createConversation(activeOwnerId, firstMessage);
 
@@ -633,9 +610,7 @@
               message.imagePreview || null
             );
 
-            if (message.role === "assistant") {
-              renderMath(element);
-            }
+            if (message.role === "assistant") renderMath(element);
           });
         }
 
@@ -880,7 +855,6 @@
       }
     });
 
-    // One auth listener only
     supabaseClient.auth.onAuthStateChange((event, session) => {
       currentSession = session;
       setTimeout(() => updateAccount(session), 0);
@@ -1182,9 +1156,7 @@
 
       refreshVoiceList();
 
-      if (recognition) {
-        recognition.lang = getRecognitionLanguage();
-      }
+      if (recognition) recognition.lang = getRecognitionLanguage();
 
       if (voiceStatus) voiceStatus.textContent = "Language updated.";
     });
@@ -1464,7 +1436,7 @@
     });
 
     // =====================================
-    // SEND MESSAGE — FIXED
+    // SEND MESSAGE
     // =====================================
 
     async function sendMessage({ speakReply = false } = {}) {
@@ -1630,10 +1602,9 @@
     }
 
     // =====================================
-    // CRITICAL FIX — PREVENT FORM REFRESH
+    // PREVENT FORM REFRESH
     // =====================================
 
-    // Capture submit before normal browser form handling.
     document.addEventListener("submit", event => {
       if (event.target?.id !== "chat-form") return;
 
@@ -1644,7 +1615,6 @@
       sendMessage();
     }, true);
 
-    // Also protect the form directly.
     form.addEventListener("submit", event => {
       event.preventDefault();
       event.stopPropagation();
