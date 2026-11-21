@@ -1,15 +1,15 @@
-
+CSS
 :root {
-  --bg: #080b14;
-  --sidebar: #0a0e18;
-  --panel: #101725;
-  --panel2: #151f30;
-  --line: #222e43;
-  --text: #edf3ff;
-  --muted: #8796ae;
-  --accent: #9db9ed;
-  --cyan: #7bd8df;
-  --purple: #a99af5;
+  --bg: #08060D;
+  --sidebar: #0C0913;
+  --panel: #120D1B;
+  --panel2: #1A1226;
+  --line: #2A1D3A;
+  --text: #F3ECFA;
+  --muted: #A093AE;
+  --accent: #A970FF;
+  --cyan: #C4A7FF;
+  --purple: #8B5CF6;
   --radius: 17px;
 }
 
@@ -38,8 +38,10 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible, textarea:focus-visible, select:focus-visible {
-  outline: 2px solid var(--cyan);
+button:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -52,7 +54,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   min-height: 100vh;
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse at 70% -15%, rgba(58, 87, 145, .13), transparent 48%),
+    radial-gradient(ellipse at 70% -15%, rgba(139, 92, 246, .12), transparent 48%),
     var(--bg);
 }
 
@@ -65,7 +67,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   padding: 25px 17px 18px;
   display: flex;
   flex-direction: column;
-  background: rgba(10, 14, 24, .97);
+  background: rgba(12, 9, 19, .98);
   border-right: 1px solid var(--line);
   z-index: 3;
 }
@@ -85,9 +87,9 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 13px;
-  color: #09111e;
-  background: linear-gradient(145deg, #e8f2ff, #91b4e4);
-  box-shadow: 0 0 25px rgba(116, 167, 231, .18);
+  color: #FFFFFF;
+  background: linear-gradient(145deg, #C4A7FF, #8B5CF6 55%, #6327C8);
+  box-shadow: 0 0 25px rgba(139, 92, 246, .28);
   font-size: 18px;
   font-weight: 900;
 }
@@ -100,23 +102,24 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   align-items: center;
   gap: 11px;
   padding: 0 14px;
-  color: #f0f5ff;
-  background: linear-gradient(110deg, #1b2a43, #172238);
-  border: 1px solid #344967;
+  color: #F3ECFA;
+  background: linear-gradient(110deg, #211431, #171020);
+  border: 1px solid #493064;
   border-radius: 12px;
   text-align: left;
   transition: .2s ease;
 }
 
 .new-chat-btn:hover {
-  background: #243652;
-  border-color: #617ba3;
+  background: #2A1940;
+  border-color: #9B6AE8;
   transform: translateY(-1px);
+  box-shadow: 0 5px 22px rgba(139, 92, 246, .12);
 }
 
 .plus {
   font-size: 22px;
-  color: var(--cyan);
+  color: var(--accent);
 }
 
 .sidebar-section {
@@ -125,7 +128,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 
 .sidebar-label {
   margin: 0 6px 15px;
-  color: #657792;
+  color: #806A9C;
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 1.8px;
@@ -136,7 +139,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   align-items: center;
   gap: 10px;
   padding: 10px 7px;
-  color: #d5e0f2;
+  color: #D9CBEA;
   font-size: 13px;
 }
 
@@ -145,13 +148,13 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   height: 8px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #66d5a6;
+  background: #66D5A6;
   box-shadow: 0 0 12px rgba(102, 213, 166, .45);
 }
 
 .sidebar-caption {
   padding-left: 25px;
-  color: #65748b;
+  color: #756486;
   font-size: 11px;
 }
 
@@ -172,14 +175,15 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   height: 34px;
   display: grid;
   place-items: center;
-  color: var(--cyan);
-  background: rgba(123, 216, 223, .09);
-  border: 1px solid rgba(123, 216, 223, .2);
+  color: var(--accent);
+  background: rgba(139, 92, 246, .12);
+  border: 1px solid rgba(139, 92, 246, .28);
   border-radius: 11px;
   font-size: 19px;
 }
 
-.sidebar-footer strong, .sidebar-footer span {
+.sidebar-footer strong,
+.sidebar-footer span {
   display: block;
 }
 
@@ -210,8 +214,8 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   display: flex;
   align-items: center;
   gap: 18px;
-  border-bottom: 1px solid rgba(34, 46, 67, .8);
-  background: rgba(8, 11, 20, .68);
+  border-bottom: 1px solid rgba(42, 29, 58, .8);
+  background: rgba(8, 6, 13, .78);
   backdrop-filter: blur(18px);
 }
 
@@ -223,7 +227,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #aab8ce;
+  color: #B7A6CC;
   font-size: 12px;
   letter-spacing: .3px;
 }
@@ -232,8 +236,8 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--cyan);
-  box-shadow: 0 0 12px rgba(123, 216, 223, .55);
+  background: var(--accent);
+  box-shadow: 0 0 12px rgba(169, 112, 255, .65);
 }
 
 .account-area {
@@ -248,34 +252,38 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 
 #credits-display {
   padding: 8px 12px;
-  color: #b8d6ff;
-  background: rgba(82, 133, 206, .12);
-  border: 1px solid rgba(112, 160, 225, .24);
+  color: #D5B8FF;
+  background: rgba(139, 92, 246, .12);
+  border: 1px solid rgba(169, 112, 255, .28);
   border-radius: 20px;
   white-space: nowrap;
 }
 
-#google-login, #google-logout {
+#google-login,
+#google-logout {
   padding: 9px 13px;
-  color: #eef4ff;
-  background: #182438;
-  border: 1px solid #354761;
+  color: #F3ECFA;
+  background: #1B1227;
+  border: 1px solid #493064;
   border-radius: 10px;
   font-size: 12px;
   transition: .2s;
 }
 
-#google-login:hover, #google-logout:hover {
-  background: #253650;
-  border-color: #617b9e;
+#google-login:hover,
+#google-logout:hover {
+  background: #2A1940;
+  border-color: #A970FF;
 }
 
-#google-login:disabled, #google-logout:disabled {
+#google-login:disabled,
+#google-logout:disabled {
   opacity: .55;
   cursor: wait;
 }
 
-#google-login[hidden], #google-logout[hidden] {
+#google-login[hidden],
+#google-logout[hidden] {
   display: none;
 }
 
@@ -301,7 +309,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   gap: 20px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #34445d transparent;
+  scrollbar-color: #583C78 transparent;
 }
 
 .chat-messages::-webkit-scrollbar {
@@ -309,7 +317,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background: #34445d;
+  background: #583C78;
   border-radius: 10px;
 }
 
@@ -325,8 +333,14 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 @keyframes appear {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .welcome-orb {
@@ -337,8 +351,8 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 24px;
-  background: linear-gradient(135deg, #8be3e4, #8a9ff0 50%, #b69af2);
-  box-shadow: 0 0 38px rgba(115, 170, 224, .16);
+  background: linear-gradient(135deg, #D6B8FF, #A970FF 50%, #6425C8);
+  box-shadow: 0 0 38px rgba(139, 92, 246, .25);
   transform: rotate(-5deg);
 }
 
@@ -347,8 +361,8 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   height: 100%;
   display: grid;
   place-items: center;
-  color: #eaf4ff;
-  background: #101827;
+  color: #F5EDFF;
+  background: #120D1B;
   border-radius: 23px;
   font-size: 31px;
   font-weight: 850;
@@ -361,7 +375,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   align-items: center;
   gap: 12px;
   margin-bottom: 18px;
-  color: #8ca9cb;
+  color: #B18AE5;
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 3px;
@@ -370,7 +384,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 .tag-line {
   width: 23px;
   height: 1px;
-  background: #536c91;
+  background: #78529F;
 }
 
 .welcome h1 {
@@ -382,8 +396,8 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .welcome h1 span {
-  color: #9fb8e5;
-  background: linear-gradient(90deg, #9edce1, #a8b8f1, #c3a7f1);
+  color: #C4A7FF;
+  background: linear-gradient(90deg, #D6B8FF, #A970FF, #8B5CF6);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -392,7 +406,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 .welcome p {
   max-width: 510px;
   margin: 17px auto 0;
-  color: #8998b0;
+  color: #A093AE;
   font-size: 14px;
   line-height: 1.8;
 }
@@ -415,17 +429,17 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   padding: 15px;
   text-align: left;
   color: var(--text);
-  background: linear-gradient(145deg, rgba(22, 33, 51, .95), rgba(15, 23, 36, .95));
-  border: 1px solid #293951;
+  background: linear-gradient(145deg, rgba(29, 19, 42, .96), rgba(17, 12, 25, .96));
+  border: 1px solid #352346;
   border-radius: 14px;
   transition: .22s ease;
 }
 
 .suggestion:hover {
   transform: translateY(-3px);
-  border-color: #617da5;
-  background: #1a2940;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .17);
+  border-color: #9864D8;
+  background: #21152F;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .25);
 }
 
 .suggestion-icon {
@@ -434,9 +448,9 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   flex: 0 0 37px;
   display: grid;
   place-items: center;
-  color: var(--cyan);
-  background: rgba(123, 216, 223, .08);
-  border: 1px solid rgba(123, 216, 223, .17);
+  color: #C4A7FF;
+  background: rgba(139, 92, 246, .12);
+  border: 1px solid rgba(169, 112, 255, .24);
   border-radius: 11px;
   font-size: 20px;
 }
@@ -446,7 +460,8 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   flex: 1;
 }
 
-.suggestion-copy strong, .suggestion-copy small {
+.suggestion-copy strong,
+.suggestion-copy small {
   display: block;
 }
 
@@ -463,7 +478,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .suggestion-arrow {
-  color: #6d819e;
+  color: #A17AC6;
   font-size: 16px;
 }
 
@@ -482,15 +497,15 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 
 .message.user {
   align-self: flex-end;
-  background: linear-gradient(145deg, #233957, #192a42);
-  border: 1px solid #3a5477;
+  background: linear-gradient(145deg, #382052, #261638);
+  border: 1px solid #70469B;
   border-bottom-right-radius: 5px;
 }
 
 .message.assistant {
   align-self: flex-start;
-  background: #111a28;
-  border: 1px solid #29384d;
+  background: #15101E;
+  border: 1px solid #352541;
   border-bottom-left-radius: 5px;
 }
 
@@ -500,7 +515,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   max-height: 300px;
   object-fit: contain;
   margin-top: 12px;
-  border: 1px solid #354761;
+  border: 1px solid #60427B;
   border-radius: 12px;
 }
 
@@ -527,16 +542,17 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   gap: 9px;
   flex-wrap: wrap;
   padding: 10px 11px;
-  background: linear-gradient(145deg, #141e2d, #101724);
-  border: 1px solid #34465f;
+  background: linear-gradient(145deg, #191225, #100C18);
+  border: 1px solid #49315F;
   border-radius: 18px;
-  box-shadow: 0 13px 35px rgba(0, 0, 0, .18);
+  box-shadow: 0 13px 35px rgba(0, 0, 0, .25);
   transition: border-color .2s, box-shadow .2s;
 }
 
 .composer:focus-within {
-  border-color: #718eaf;
-  box-shadow: 0 0 0 3px rgba(123, 216, 223, .06);
+  border-color: #A970FF;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, .09),
+              0 0 25px rgba(139, 92, 246, .09);
 }
 
 #message-input {
@@ -555,7 +571,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 #message-input::placeholder {
-  color: #8190a8;
+  color: #887B99;
 }
 
 .composer-tool {
@@ -564,7 +580,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   flex: 0 0 39px;
   display: grid;
   place-items: center;
-  color: #b4c3d9;
+  color: #BBA7D2;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 11px;
@@ -574,19 +590,21 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 
 .composer-tool:hover {
   color: white;
-  background: #243650;
-  border-color: #3b5271;
+  background: #2B1A3E;
+  border-color: #69438C;
 }
 
 #voice-input-btn.listening {
   color: #fff;
-  background: #632e40;
-  border-color: #c55b78;
+  background: #632E55;
+  border-color: #C55B9A;
   animation: voice-pulse 1.2s infinite;
 }
 
 @keyframes voice-pulse {
-  50% { box-shadow: 0 0 0 5px rgba(197, 91, 120, .13); }
+  50% {
+    box-shadow: 0 0 0 5px rgba(197, 91, 154, .13);
+  }
 }
 
 #send-btn {
@@ -595,18 +613,19 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   flex: 0 0 42px;
   display: grid;
   place-items: center;
-  color: #09111e;
-  background: linear-gradient(145deg, #dff8ff, #9fc8e9);
+  color: #FFFFFF;
+  background: linear-gradient(145deg, #B98AFF, #8B5CF6);
   border: 0;
   border-radius: 13px;
   font-size: 25px;
   font-weight: 700;
   transition: .2s;
+  box-shadow: 0 3px 15px rgba(139, 92, 246, .2);
 }
 
 #send-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(123, 216, 223, .19);
+  box-shadow: 0 5px 20px rgba(139, 92, 246, .35);
 }
 
 #send-btn:disabled {
@@ -625,7 +644,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   width: 85px;
   height: 85px;
   object-fit: cover;
-  border: 1px solid #455b78;
+  border: 1px solid #694A88;
   border-radius: 11px;
 }
 
@@ -636,7 +655,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   width: 24px;
   height: 24px;
   color: white;
-  background: #38465c;
+  background: #4B315F;
   border: 0;
   border-radius: 50%;
   font-size: 18px;
@@ -647,7 +666,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   justify-content: space-between;
   gap: 10px;
   margin: 11px 4px 0;
-  color: #697991;
+  color: #857493;
   font-size: 10px;
 }
 
@@ -656,7 +675,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .composer-brand i {
-  color: var(--cyan);
+  color: var(--accent);
   font-style: normal;
 }
 
@@ -664,7 +683,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   display: block;
   min-height: 0;
   margin: 5px 4px 0;
-  color: #8ca8c9;
+  color: #B99AE4;
   font-size: 11px;
 }
 
@@ -680,9 +699,9 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   align-items: center;
   gap: 8px;
   padding: 8px 11px;
-  color: #aabbd2;
-  background: #111a29;
-  border: 1px solid #2a3b53;
+  color: #C3B1D8;
+  background: #171020;
+  border: 1px solid #49315F;
   border-radius: 10px;
   font-size: 11px;
   transition: .2s;
@@ -690,13 +709,13 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 
 .voice-settings-toggle:hover,
 .voice-settings-toggle[aria-expanded="true"] {
-  color: #e8f3ff;
-  background: #1a2940;
-  border-color: #526d91;
+  color: #F5EDFF;
+  background: #271737;
+  border-color: #A970FF;
 }
 
 .toggle-chevron {
-  color: var(--cyan);
+  color: var(--accent);
   font-size: 15px;
 }
 
@@ -704,10 +723,10 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   width: min(100%, 480px);
   margin-bottom: 10px;
   padding: 16px;
-  background: #101a29;
-  border: 1px solid #344963;
+  background: #15101F;
+  border: 1px solid #49315F;
   border-radius: 15px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, .3);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .4);
   animation: appear .18s ease;
 }
 
@@ -738,9 +757,9 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   height: 34px;
   display: grid;
   place-items: center;
-  color: var(--cyan);
-  background: rgba(123, 216, 223, .09);
-  border: 1px solid rgba(123, 216, 223, .2);
+  color: #C4A7FF;
+  background: rgba(139, 92, 246, .13);
+  border: 1px solid rgba(169, 112, 255, .28);
   border-radius: 10px;
 }
 
@@ -758,7 +777,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .voice-field label {
-  color: #aabbd2;
+  color: #C3B1D8;
   font-size: 11px;
 }
 
@@ -767,15 +786,15 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
   min-width: 0;
   padding: 10px;
   color: var(--text);
-  background: #182438;
-  border: 1px solid #344763;
+  background: #21162E;
+  border: 1px solid #49315F;
   border-radius: 9px;
   font-size: 12px;
 }
 
 .voice-field option {
   color: white;
-  background: #111927;
+  background: #15101F;
 }
 
 .voice-panel-actions {
@@ -787,22 +806,23 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 
 .voice-btn {
   padding: 9px 12px;
-  color: #dce9fb;
-  background: #1a2940;
-  border: 1px solid #354d6c;
+  color: #E5D7F5;
+  background: #261735;
+  border: 1px solid #563A73;
   border-radius: 9px;
   font-size: 11px;
   transition: .2s;
 }
 
 .voice-btn:hover {
-  background: #263d5c;
+  background: #38204E;
+  border-color: #9562C9;
 }
 
 .voice-btn.active {
-  color: #c5ffe9;
-  background: #174c40;
-  border-color: #2c9b78;
+  color: #E8D8FF;
+  background: #39205B;
+  border-color: #A970FF;
 }
 
 .voice-btn:disabled {
@@ -812,7 +832,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible {
 
 .voice-note {
   margin: 12px 0 0;
-  color: #74859e;
+  color: #8E7D9E;
   font-size: 10px;
   line-height: 1.5;
 }
