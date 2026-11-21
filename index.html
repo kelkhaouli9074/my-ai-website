@@ -1,4 +1,4 @@
-Writing
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,6 +36,7 @@ Writing
 
 <div class="app">
 
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="main-sidebar">
 
     <div class="brand">
@@ -80,6 +81,7 @@ Writing
 
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
+  <!-- MAIN -->
   <main class="main">
 
     <header class="topbar">
@@ -113,6 +115,7 @@ Writing
 
     </header>
 
+    <!-- CHAT MESSAGES -->
     <section class="chat-messages" id="chat-messages">
 
       <div class="welcome" id="welcome">
@@ -180,6 +183,7 @@ Writing
 
     </section>
 
+    <!-- COMPOSER -->
     <footer class="composer-area">
 
       <div class="voice-settings-wrap">
@@ -290,6 +294,7 @@ Writing
 
 </div>
 
+<!-- ABOUT MY AI MODAL -->
 <div id="about-modal" class="custom-modal" hidden>
 
   <div class="modal-card">
@@ -309,9 +314,146 @@ Writing
       MY AI · Personal Assistant
     </span>
 
+    <div class="about-divider"></div>
+
+    <!-- FOUNDER INFORMATION -->
+
+    <h3>About the Founder</h3>
+
+    <h2 class="founder-name">Khalid El Khaouli</h2>
+
+    <p class="founder-role">
+      Founder &amp; Developer of MY AI
+    </p>
+
+    <div class="founder-details">
+
+      <div>
+        <strong>Nationality</strong>
+        <span>Moroccan 🇲🇦</span>
+      </div>
+
+      <div>
+        <strong>Year of Birth</strong>
+        <span>2007</span>
+      </div>
+
+      <div>
+        <strong>Education</strong>
+        <span>Faculty of Sciences and Techniques of Marrakech (FST Marrakech)</span>
+      </div>
+
+      <div>
+        <strong>Field of Study</strong>
+        <span>Electrical Engineering (Génie Électrique)</span>
+      </div>
+
+      <div>
+        <strong>Interests</strong>
+        <span>Web Development &amp; Artificial Intelligence</span>
+      </div>
+
+      <div>
+        <strong>First Development Project</strong>
+        <span>MY AI</span>
+      </div>
+
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- CONTACT -->
+
+    <h3>Contact</h3>
+
+    <a
+      class="founder-email"
+      href="mailto:K.elkhaouli9074@uca.ac.ma">
+      K.elkhaouli9074@uca.ac.ma
+    </a>
+
+    <p class="founder-note">
+      MY AI is my first development project, created as a step
+      toward learning, improving my skills, and building my own AI platform.
+    </p>
+
+    <span class="modal-version">
+      MY AI · Personal Assistant · © 2026
+    </span>
+
   </div>
 
 </div>
+
+<style>
+  /* FOUNDER SECTION */
+
+  .about-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--line);
+    margin: 22px 0;
+  }
+
+  .founder-name {
+    margin: 12px 0 4px;
+    color: var(--text);
+  }
+
+  .founder-role {
+    color: var(--accent-light);
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+
+  .founder-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    width: 100%;
+    margin-top: 18px;
+  }
+
+  .founder-details div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 11px 13px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .founder-details strong {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .founder-details span {
+    color: var(--text);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .founder-email {
+    color: var(--accent-light);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+  }
+
+  .founder-email:hover {
+    text-decoration: underline;
+  }
+
+  .founder-note {
+    margin-top: 18px;
+    line-height: 1.7;
+    font-size: 13px;
+    color: var(--muted);
+  }
+</style>
 
 </body>
 </html>
