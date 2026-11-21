@@ -1,9 +1,11 @@
+JavaScript
 
 "use strict";
 
 /* =========================================
    MY AI — COMPLETE APP.JS
-   Fixed History UI + Chat + Supabase
+   About Modal Fix + Chat + Supabase
+   History + Voice + Image Upload
 ========================================= */
 
 (() => {
@@ -100,6 +102,45 @@
           elements.messages.scrollHeight;
       }
     }
+
+    /* ABOUT MY AI — FIXED */
+
+    function openAboutModal() {
+      if (!elements.aboutModal) {
+        console.error("About modal not found: #about-modal");
+        return;
+      }
+
+      closeSidebar();
+
+      elements.aboutModal.hidden = false;
+      elements.aboutModal.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeAboutModal() {
+      if (!elements.aboutModal) return;
+
+      elements.aboutModal.classList.remove("active");
+      elements.aboutModal.hidden = true;
+      document.body.style.overflow = "";
+    }
+
+    elements.about?.addEventListener("click", event => {
+      event.preventDefault();
+      openAboutModal();
+    });
+
+    elements.closeAbout?.addEventListener("click", event => {
+      event.preventDefault();
+      closeAboutModal();
+    });
+
+    elements.aboutModal?.addEventListener("click", event => {
+      if (event.target === elements.aboutModal) {
+        closeAboutModal();
+      }
+    });
 
     /* SUPABASE */
 
@@ -619,10 +660,12 @@
 
       conversations.forEach(conversation => {
         const item = document.createElement("div");
-
-        /* Correct class names matching CSS */
         item.className = "myai-history-item";
         item.dataset.chatId = conversation.id;
+
+        if (activeConversation?.id === conversation.id) {
+          item.classList.add("active");
+        }
 
         const title = document.createElement("span");
         title.className = "myai-history-title";
@@ -650,7 +693,10 @@
       }
 
       activeConversation = conversation;
-      elements.messages.innerHTML = "";
+
+      if (elements.messages) {
+        elements.messages.innerHTML = "";
+      }
 
       for (const message of conversation.messages || []) {
         if (!message.sentToModel && message.role === "user") {
@@ -665,6 +711,7 @@
       }
 
       closeSidebar();
+      await renderConversationList();
     }
 
     async function startNewChat() {
@@ -698,7 +745,7 @@
     document.addEventListener("keydown", event => {
       if (event.key === "Escape") {
         closeSidebar();
-        elements.aboutModal?.classList.remove("active");
+        closeAboutModal();
       }
     });
 
@@ -711,21 +758,6 @@
           behavior: "smooth",
           block: "center"
         });
-      }
-    });
-
-    elements.about?.addEventListener("click", () => {
-      closeSidebar();
-      elements.aboutModal?.classList.add("active");
-    });
-
-    elements.closeAbout?.addEventListener("click", () => {
-      elements.aboutModal?.classList.remove("active");
-    });
-
-    elements.aboutModal?.addEventListener("click", event => {
-      if (event.target === elements.aboutModal) {
-        elements.aboutModal.classList.remove("active");
       }
     });
 
@@ -1161,6 +1193,7 @@
 
     async function start() {
       closeSidebar();
+      closeAboutModal();
       createHistoryInterface();
       showWelcome();
       loadVoices();
