@@ -16,24 +16,18 @@ You are an AI assistant created for the MY AI project.
 
 FOUNDER INFORMATION:
 The founder of MY AI is Khalid El Khaouli (خالد الخولي).
-He studies at FST Marrakech.
 He is the founder and developer of the MY AI project.
 
 FOUNDER'S VISION:
-Khalid's goal is to create an integrated AI application
+The goal is to create an integrated AI application
 that brings together different artificial intelligence
 tools and technologies in one platform.
 
-If someone asks:
-- Who is the founder of MY AI?
-- Who created MY AI?
-- Who owns MY AI?
-
-Answer:
+If someone asks who created MY AI, answer:
 "Khalid El Khaouli (خالد الخولي) is the founder of MY AI."
 
 Only share the founder information written above.
-Never invent personal information about him.
+Never invent personal information.
 Do not reveal private information.
 
 BEHAVIOR:
@@ -46,6 +40,7 @@ BEHAVIOR:
 - Your assistant name is always MY AI.
 `;
 
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
@@ -54,6 +49,8 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
 
   if (!apiKey) {
     return res.status(500).json({
@@ -61,7 +58,54 @@ export default async function handler(req, res) {
     });
   }
 
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({
+      error: "Supabase server configuration is missing in Vercel."
+    });
+  }
+
   try {
+    /* VERIFY SUPABASE USER */
+
+    const authHeader = req.headers.authorization || "";
+    const accessToken = authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : "";
+
+    if (!accessToken) {
+      return res.status(401).json({
+        error: "Please sign in before using MY AI."
+      });
+    }
+
+    const authResponse = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/auth/v1/user`,
+      {
+        method: "GET",
+        headers: {
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    if (!authResponse.ok) {
+      return res.status(401).json({
+        error: "Your session is invalid or expired. Please sign in again."
+      });
+    }
+
+    const authenticatedUser = await authResponse.json();
+
+    if (!authenticatedUser || !authenticatedUser.id) {
+      return res.status(401).json({
+        error: "Could not verify your account."
+      });
+    }
+
+
+    /* READ REQUEST */
+
     const {
       message,
       history = [],
@@ -74,42 +118,80 @@ export default async function handler(req, res) {
       });
     }
 
+    if (
+      message &&
+      (typeof message !== "string" || message.length > 20000)
+    ) {
+      return res.status(400).json({
+        error: "Message is too long or invalid."
+      });
+    }
+
+
+    /* BUILD CONVERSATION */
+
     const contents = [];
 
-    // Previous conversation
     if (Array.isArray(history)) {
-      history.slice(-12).forEach((item) => {
-        if (!item || !item.content) return;
+      history.slice(-12).forEach(item => {
+        if (
+          !item ||
+          typeof item.content !== "string" ||
+          !item.content.trim()
+        ) {
+          return;
+        }
 
         contents.push({
-          role:
-            item.role === "assistant"
-              ? "model"
-              : "user",
+          role: item.role === "assistant" ? "model" : "user",
           parts: [
             {
-              text: String(item.content)
+              text: item.content.slice(0, 20000)
             }
           ]
         });
       });
     }
 
-    // Current message
+
+    /* CURRENT MESSAGE */
+
     const parts = [];
 
     if (message) {
       parts.push({
-        text: String(message)
+        text: message
       });
     }
 
-    // Uploaded image
-    if (
-      image &&
-      image.data &&
-      image.mimeType
-    ) {
+
+    /* IMAGE VALIDATION */
+
+    if (image) {
+      const allowedMimeTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ];
+
+      if (
+        !image.data ||
+        !allowedMimeTypes.includes(image.mimeType)
+      ) {
+        return res.status(400).json({
+          error: "Invalid image."
+        });
+      }
+
+      if (
+        typeof image.data !== "string" ||
+        image.data.length > 12 * 1024 * 1024
+      ) {
+        return res.status(400).json({
+          error: "Image is too large."
+        });
+      }
+
       parts.push({
         inline_data: {
           mime_type: image.mimeType,
@@ -118,14 +200,17 @@ export default async function handler(req, res) {
       });
     }
 
+
     contents.push({
       role: "user",
       parts
     });
 
+
+    /* CALL GEMINI */
+
     let lastError = "";
 
-    // Try primary and fallback models
     for (const model of MODELS) {
       try {
         const response = await fetch(
@@ -167,8 +252,7 @@ export default async function handler(req, res) {
               .trim();
 
           if (!reply) {
-            lastError =
-              "The model returned an empty response.";
+            lastError = "The model returned an empty response.";
             continue;
           }
 
@@ -203,16 +287,17 @@ export default async function handler(req, res) {
       }
     }
 
+
     return res.status(503).json({
-      error:
-        "Both Gemini models are unavailable. Please try again.",
+      error: "Both Gemini models are unavailable. Please try again.",
       details: lastError
     });
 
   } catch (error) {
+    console.error("MY AI API error:", error);
+
     return res.status(500).json({
-      error:
-        error.message || "Internal server error."
+      error: "Internal server error."
     });
   }
 }
