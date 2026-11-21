@@ -1,0 +1,11 @@
+https://my-ai-website-git-main-my-ai-b61f.vercel.app/app.js](
+{
+  "version": 2,
+  "cleanUrls": false,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ]
+}
