@@ -1,235 +1,43 @@
+<aside class="sidebar" id="main-sidebar">
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080b14">
-  <title>MY AI — Intelligent Assistant</title>
-  <link rel="stylesheet" href="/style.css">
+  <div class="brand">
+    <div class="brand-icon">M</div>
+    <span>MY AI</span>
+    <button id="close-sidebar" class="sidebar-close" type="button">×</button>
+  </div>
 
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-      },
-      svg: { fontCache: 'global' },
-      startup: { typeset: false }
-    };
-  </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-</head>
+  <button id="new-chat-btn" class="new-chat-btn" type="button">
+    <span class="plus">＋</span>
+    <span>New chat</span>
+  </button>
 
-<body>
-<div class="app">
+  <!-- Recent chats will be inserted here by app.js -->
 
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-icon">M</div>
-      <span>MY AI</span>
-    </div>
+  <div class="sidebar-navigation">
 
-    <button id="new-chat-btn" class="new-chat-btn" type="button">
-      <span class="plus">＋</span>
-      <span>New chat</span>
+    <button class="sidebar-nav-btn" id="open-settings" type="button">
+      <span>⚙</span>
+      <span>Settings</span>
     </button>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">WORKSPACE</div>
-      <div class="sidebar-info">
-        <span class="status-dot"></span>
-        <span>MY AI Assistant</span>
-      </div>
-      <div class="sidebar-caption">Your intelligent workspace</div>
+    <button class="sidebar-nav-btn" id="open-about" type="button">
+      <span>ⓘ</span>
+      <span>About Us</span>
+    </button>
+
+  </div>
+
+  <div class="sidebar-spacer"></div>
+
+  <button id="personal-account" class="personal-account" type="button">
+    <div class="profile-avatar">M</div>
+    <div class="profile-info">
+      <strong>Personal Account</strong>
+      <span id="sidebar-account-email">Not signed in</span>
     </div>
+    <span class="profile-arrow">›</span>
+  </button>
 
-    <div class="sidebar-spacer"></div>
+</aside>
 
-    <div class="sidebar-footer">
-      <div class="footer-symbol">✳</div>
-      <div>
-        <strong>MY AI</strong>
-        <span>Powered by AI</span>
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-
-    <header class="topbar">
-      <div class="mobile-brand">
-        <div class="brand-icon">M</div>
-        <span>MY AI</span>
-      </div>
-
-      <div class="topbar-center">
-        <span class="topbar-indicator"></span>
-        <span>AI Workspace</span>
-      </div>
-
-      <div class="account-area">
-        <span id="credits-display">Credits: --</span>
-        <button id="google-login" type="button">Sign in with Google</button>
-        <button id="google-logout" type="button" hidden>Sign out</button>
-        <span id="account-email"></span>
-      </div>
-    </header>
-
-    <section id="chat-messages" class="chat-messages">
-      <div class="welcome" id="welcome">
-        <div class="welcome-orb">
-          <div class="orb-core">M</div>
-        </div>
-
-        <div class="welcome-tag">
-          <span class="tag-line"></span>
-          YOUR PERSONAL AI
-          <span class="tag-line"></span>
-        </div>
-
-        <h1>Think beyond<br><span>the ordinary.</span></h1>
-        <p>
-          Ask questions, explore ideas, create something new
-          or learn something you have always wanted to understand.
-        </p>
-
-        <div class="suggestions">
-          <button type="button" class="suggestion"
-            data-prompt="Explain a difficult scientific concept simply.">
-            <span class="suggestion-icon">◈</span>
-            <span class="suggestion-copy">
-              <strong>Learn something</strong>
-              <small>Understand difficult concepts</small>
-            </span>
-            <span class="suggestion-arrow">↗</span>
-          </button>
-
-          <button type="button" class="suggestion"
-            data-prompt="Help me solve a mathematics problem step by step.">
-            <span class="suggestion-icon">∑</span>
-            <span class="suggestion-copy">
-              <strong>Mathematics</strong>
-              <small>Equations and calculations</small>
-            </span>
-            <span class="suggestion-arrow">↗</span>
-          </button>
-
-          <button type="button" class="suggestion"
-            data-prompt="Give me creative ideas for a new project.">
-            <span class="suggestion-icon">✧</span>
-            <span class="suggestion-copy">
-              <strong>Explore ideas</strong>
-              <small>Discover new possibilities</small>
-            </span>
-            <span class="suggestion-arrow">↗</span>
-          </button>
-
-          <button type="button" class="suggestion"
-            data-prompt="Help me write and improve some code.">
-            <span class="suggestion-icon">⌘</span>
-            <span class="suggestion-copy">
-              <strong>Write code</strong>
-              <small>Build and improve projects</small>
-            </span>
-            <span class="suggestion-arrow">↗</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <footer class="composer-area">
-
-      <div class="voice-settings-wrap">
-        <button type="button" id="voice-settings-toggle"
-          class="voice-settings-toggle" aria-expanded="false"
-          aria-controls="voice-settings-panel">
-          <span>⚙</span>
-          Voice settings
-          <span class="toggle-chevron">⌄</span>
-        </button>
-
-        <div id="voice-settings-panel" class="voice-panel" hidden>
-          <div class="voice-panel-heading">
-            <div>
-              <strong>Voice Studio</strong>
-              <small>Customize your voice experience</small>
-            </div>
-            <span class="voice-panel-icon">♫</span>
-          </div>
-
-          <div class="voice-fields">
-            <div class="voice-field">
-              <label for="voice-language">Language / اللغة</label>
-              <select id="voice-language">
-                <option value="auto">Auto — تلقائي</option>
-                <option value="darija">🇲🇦 الدارجة المغربية</option>
-                <option value="ar">العربية الفصحى</option>
-                <option value="en">🇬🇧 English</option>
-                <option value="fr">🇫🇷 Français</option>
-                <option value="es">🇪🇸 Español</option>
-              </select>
-            </div>
-
-            <div class="voice-field">
-              <label for="voice-choice">Voice / الصوت</label>
-              <select id="voice-choice">
-                <option value="">Loading voices...</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="voice-panel-actions">
-            <button type="button" id="preview-voice-btn" class="voice-btn">
-              ▶ Try voice
-            </button>
-            <button type="button" id="voice-output-btn" class="voice-btn">
-              🔊 Voice off
-            </button>
-            <button type="button" id="stop-voice-btn" class="voice-btn" hidden>
-              ⏹ Stop
-            </button>
-          </div>
-
-          <p class="voice-note">Available voices depend on your device and browser.</p>
-        </div>
-      </div>
-
-      <form id="chat-form" class="composer">
-        <div id="image-preview" class="image-preview" hidden>
-          <img id="preview-img" alt="Selected image">
-          <button type="button" id="remove-image" aria-label="Remove image">×</button>
-        </div>
-
-        <input type="file" id="image-input"
-          accept="image/jpeg,image/png,image/webp" hidden>
-
-        <button type="button" id="attach-btn" class="composer-tool"
-          title="Attach image" aria-label="Attach image">＋</button>
-
-        <textarea id="message-input" placeholder="Message MY AI..."
-          rows="1" aria-label="Write your message"></textarea>
-
-        <button type="button" id="voice-input-btn" class="composer-tool voice-mic"
-          title="Speak" aria-label="Speak">🎙</button>
-
-        <button type="submit" id="send-btn" aria-label="Send message">
-          <span>↑</span>
-        </button>
-      </form>
-
-      <div class="composer-bottom">
-        <span>MY AI can make mistakes. Verify important information.</span>
-        <span class="composer-brand">MY AI <i>✳</i></span>
-      </div>
-
-      <span id="voice-status" class="voice-status" aria-live="polite"></span>
-    </footer>
-
-  </main>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/app.js"></script>
-</body>
-</html>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
