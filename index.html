@@ -1,3 +1,4 @@
+Writing
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,11 +26,6 @@
         typeset: false
       }
     };
-
-    // Temporary button test
-    window.testMYAIButton = function () {
-      alert("BUTTON WORKS");
-    };
   </script>
 
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -48,7 +44,7 @@
       <button id="close-sidebar" class="sidebar-close" type="button">×</button>
     </div>
 
-    <button id="new-chat-btn" class="new-chat-btn" type="button" onclick="testMYAIButton()">
+    <button id="new-chat-btn" class="new-chat-btn" type="button">
       <span>＋</span>
       <span>New chat</span>
     </button>
@@ -236,11 +232,17 @@
 
       <div id="voice-status" class="voice-status"></div>
 
-      <form id="chat-form" class="composer">
+      <form
+        id="chat-form"
+        class="composer"
+        onsubmit="event.preventDefault(); return false;">
 
         <div id="image-preview" class="image-preview" hidden>
           <img id="preview-img" alt="Image preview">
-          <button id="remove-image" type="button" aria-label="Remove image">×</button>
+
+          <button id="remove-image" type="button" aria-label="Remove image">
+            ×
+          </button>
         </div>
 
         <input
@@ -292,7 +294,9 @@
 
   <div class="modal-card">
 
-    <button id="close-about" class="modal-close" type="button">×</button>
+    <button id="close-about" class="modal-close" type="button">
+      ×
+    </button>
 
     <div class="modal-logo">M</div>
 
