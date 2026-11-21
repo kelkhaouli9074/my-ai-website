@@ -1,7 +1,8 @@
+CSS
 
 /* =========================================
    MY AI — MATTE BLACK / DUSTY BLUE
-   COMPLETE STYLESHEET
+   COMPLETE RESPONSIVE STYLESHEET
 ========================================= */
 
 :root {
@@ -36,11 +37,11 @@ body {
   width: 100%;
   min-height: 100%;
   margin: 0;
-  background: #0b1017;
+  background: var(--bg);
 }
 
 body {
-  color: #ffffff;
+  color: var(--text);
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -84,14 +85,26 @@ select:focus-visible {
 /* SIDEBAR */
 
 .sidebar {
-  width: 258px;
-  min-width: 258px;
+  width: 265px;
+  min-width: 265px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 25px 17px 18px;
+  padding: 24px 16px 18px;
   background: var(--sidebar);
   border-right: 1px solid var(--line);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #405469 transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #405469;
+  border-radius: 10px;
 }
 
 .brand,
@@ -106,12 +119,12 @@ select:focus-visible {
 
 .brand {
   padding: 0 8px;
-  margin-bottom: 35px;
+  margin-bottom: 32px;
 }
 
 .brand-icon {
-  width: 37px;
-  height: 37px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   border-radius: 12px;
@@ -119,6 +132,7 @@ select:focus-visible {
   font-size: 19px;
   font-weight: 900;
   background: linear-gradient(145deg, #b4c8dc, #718ba7);
+  box-shadow: 0 4px 15px rgba(130, 155, 181, .15);
 }
 
 .new-chat-btn {
@@ -130,7 +144,7 @@ select:focus-visible {
   padding: 0 15px;
   border: 1px solid #50677e;
   border-radius: 12px;
-  background: #202d3b;
+  background: var(--panel-2);
   color: #ffffff;
   font-weight: 650;
   transition: var(--transition);
@@ -139,6 +153,7 @@ select:focus-visible {
 .new-chat-btn:hover {
   background: #2a3b4d;
   border-color: #8ba5bf;
+  transform: translateY(-1px);
 }
 
 .plus {
@@ -146,8 +161,10 @@ select:focus-visible {
   color: var(--purple-light);
 }
 
+/* SIDEBAR SECTIONS */
+
 .sidebar-section {
-  margin-top: 38px;
+  margin-top: 32px;
   padding: 0 10px;
 }
 
@@ -185,6 +202,7 @@ select:focus-visible {
 
 .sidebar-spacer {
   flex: 1;
+  min-height: 25px;
 }
 
 .sidebar-footer {
@@ -196,12 +214,12 @@ select:focus-visible {
 }
 
 .footer-symbol {
-  width: 35px;
-  height: 35px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border-radius: 11px;
-  background: #29394a;
+  background: var(--panel-3);
   color: var(--purple-light);
   font-size: 19px;
 }
@@ -222,6 +240,66 @@ select:focus-visible {
   font-size: 11px;
 }
 
+/* RECENT CHATS */
+
+#myai-history {
+  margin-top: 28px;
+  padding: 0 7px;
+  min-height: 0;
+}
+
+#myai-history > div:first-child {
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+#myai-history button {
+  font-family: inherit;
+}
+
+.myai-history-item {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  margin-top: 7px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: #dce5ee;
+  font-size: 12px;
+  text-align: left;
+  transition: var(--transition);
+}
+
+.myai-history-item:hover {
+  background: var(--panel-2);
+  border-color: var(--line);
+}
+
+.myai-history-item.active {
+  background: #202d3b;
+  border-color: #50677e;
+}
+
+.myai-history-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.myai-history-item button {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+
 /* MAIN */
 
 .main {
@@ -231,7 +309,7 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: #0b1017;
+  background: var(--bg);
 }
 
 /* TOPBAR */
@@ -246,6 +324,7 @@ select:focus-visible {
   padding: 0 28px;
   background: #101721;
   border-bottom: 1px solid var(--line);
+  z-index: 5;
 }
 
 .mobile-brand {
@@ -273,7 +352,7 @@ select:focus-visible {
   padding: 8px 12px;
   border: 1px solid #405469;
   border-radius: 9px;
-  background: #19232f;
+  background: var(--panel);
   color: var(--purple-light);
   font-size: 12px;
   font-weight: 700;
@@ -286,7 +365,7 @@ select:focus-visible {
   padding: 0 13px;
   border: 1px solid #50677e;
   border-radius: 9px;
-  background: #202d3b;
+  background: var(--panel-2);
   color: #ffffff;
   font-size: 12px;
   font-weight: 650;
@@ -349,8 +428,8 @@ select:focus-visible {
   margin: 0 auto 23px;
   border: 1px solid #536c86;
   border-radius: 27px;
-  background: #202d3b;
-  box-shadow: 0 0 25px rgba(130, 155, 181, .10);
+  background: var(--panel-2);
+  box-shadow: 0 0 25px var(--glow);
   transform: rotate(-5deg);
 }
 
@@ -422,9 +501,9 @@ select:focus-visible {
   align-items: center;
   gap: 12px;
   padding: 13px;
-  border: 1px solid #405469;
+  border: 1px solid var(--line);
   border-radius: 13px;
-  background: #19232f;
+  background: var(--panel);
   transition: var(--transition);
 }
 
@@ -441,7 +520,7 @@ select:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 10px;
-  background: #293b4e;
+  background: var(--panel-3);
   color: var(--purple-light);
   font-size: 18px;
 }
@@ -463,7 +542,7 @@ select:focus-visible {
 
 .suggestion-copy small {
   margin-top: 5px;
-  color: #ffffff;
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -472,7 +551,7 @@ select:focus-visible {
   font-size: 16px;
 }
 
-/* CHAT MESSAGES — AI AND USER */
+/* MESSAGES */
 
 .message {
   width: min(100%, 850px);
@@ -490,8 +569,6 @@ select:focus-visible {
   text-rendering: optimizeLegibility;
 }
 
-/* USER MESSAGE */
-
 .message.user {
   width: fit-content;
   max-width: min(85%, 700px);
@@ -506,21 +583,17 @@ select:focus-visible {
   border-bottom-right-radius: 5px;
 }
 
-/* AI MESSAGE */
-
 .message.assistant {
   margin-left: auto;
   margin-right: auto;
-  background: #19232f;
-  border: 1px solid #405469;
+  background: var(--panel);
+  border: 1px solid var(--line);
   border-bottom-left-radius: 5px;
   color: #ffffff;
   font-size: 15px;
   font-weight: 450;
   line-height: 1.9;
 }
-
-/* FORCE WHITE TEXT INSIDE MESSAGES */
 
 .message.assistant *,
 .message.user * {
@@ -564,7 +637,7 @@ select:focus-visible {
   max-width: 100%;
   overflow-x: auto;
   padding: 15px;
-  border: 1px solid #405469;
+  border: 1px solid var(--line);
   border-radius: 10px;
   background: #0b1017;
   color: #ffffff;
@@ -589,19 +662,19 @@ select:focus-visible {
 .message th,
 .message td {
   padding: 8px 11px;
-  border: 1px solid #405469;
+  border: 1px solid var(--line);
 }
 
 .message th {
-  background: #29394a;
+  background: var(--panel-3);
   color: #ffffff;
 }
 
 .message blockquote {
   margin: 12px 0;
   padding: 9px 14px;
-  border-left: 3px solid #829bb5;
-  background: #202d3b;
+  border-left: 3px solid var(--purple);
+  background: var(--panel-2);
   color: #ffffff;
 }
 
@@ -610,7 +683,7 @@ select:focus-visible {
 .composer-area {
   flex-shrink: 0;
   padding: 12px 24px 14px;
-  background: #0b1017;
+  background: var(--bg);
 }
 
 .composer {
@@ -623,7 +696,7 @@ select:focus-visible {
   padding: 10px 11px;
   border: 1px solid #50677e;
   border-radius: 17px;
-  background: #19232f;
+  background: var(--panel);
   box-shadow: 0 8px 30px rgba(0, 0, 0, .25);
   transition: var(--transition);
 }
@@ -670,7 +743,7 @@ select:focus-visible {
 
 .composer-tool:hover {
   border-color: #536c86;
-  background: #29394a;
+  background: var(--panel-3);
   color: #ffffff;
 }
 
@@ -722,7 +795,7 @@ select:focus-visible {
   height: 25px;
   border: 1px solid #536c86;
   border-radius: 50%;
-  background: #29394a;
+  background: var(--panel-3);
   color: #ffffff;
   font-size: 17px;
 }
@@ -742,7 +815,7 @@ select:focus-visible {
 }
 
 .composer-brand {
-  color: #b5c9dc;
+  color: var(--purple-light);
   font-weight: 800;
   white-space: nowrap;
 }
@@ -765,9 +838,9 @@ select:focus-visible {
   align-items: center;
   gap: 8px;
   padding: 8px 11px;
-  border: 1px solid #405469;
+  border: 1px solid var(--line);
   border-radius: 9px;
-  background: #19232f;
+  background: var(--panel);
   color: #ffffff;
   font-size: 11px;
   transition: var(--transition);
@@ -789,7 +862,7 @@ select:focus-visible {
   padding: 18px;
   border: 1px solid #50677e;
   border-radius: 15px;
-  background: #19232f;
+  background: var(--panel);
   box-shadow: 0 12px 35px rgba(0, 0, 0, .4);
 }
 
@@ -812,7 +885,7 @@ select:focus-visible {
 
 .voice-panel-heading small {
   margin-top: 5px;
-  color: #ffffff;
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -822,7 +895,7 @@ select:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 11px;
-  background: #293b4e;
+  background: var(--panel-3);
   color: var(--purple-light);
   font-size: 18px;
 }
@@ -853,7 +926,7 @@ select:focus-visible {
 }
 
 .voice-field select option {
-  background: #19232f;
+  background: var(--panel);
   color: #ffffff;
 }
 
@@ -869,7 +942,7 @@ select:focus-visible {
   padding: 0 12px;
   border: 1px solid #50677e;
   border-radius: 9px;
-  background: #29394a;
+  background: var(--panel-3);
   color: #ffffff;
   font-size: 11px;
   transition: var(--transition);
@@ -882,7 +955,7 @@ select:focus-visible {
 
 .voice-note {
   margin: 13px 0 0;
-  color: #a1b0c0;
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -913,12 +986,31 @@ select {
   color: #ffffff;
 }
 
-/* RESPONSIVE */
+/* SCROLLBARS */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #405469 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #405469;
+  border-radius: 10px;
+}
+
+/* TABLET */
 
 @media (max-width: 900px) {
   .sidebar {
-    width: 220px;
-    min-width: 220px;
+    width: 225px;
+    min-width: 225px;
+    padding-left: 13px;
+    padding-right: 13px;
   }
 
   .topbar {
@@ -928,11 +1020,23 @@ select {
   #account-email {
     display: none;
   }
+
+  .chat-messages {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
 }
+
+/* MOBILE */
 
 @media (max-width: 650px) {
   body {
     overflow: hidden;
+  }
+
+  .app {
+    width: 100%;
+    height: 100dvh;
   }
 
   .sidebar {
@@ -941,6 +1045,7 @@ select {
 
   .main {
     width: 100%;
+    min-width: 0;
   }
 
   .topbar {
@@ -1080,14 +1185,13 @@ select {
     line-height: 1.85;
   }
 
-  .message.user {
-    font-size: 14px;
-  }
-
+  .message.user,
   .message.assistant {
     font-size: 14px;
   }
 }
+
+/* SMALL MOBILE */
 
 @media (max-width: 380px) {
   .welcome h1 {
@@ -1104,5 +1208,22 @@ select {
 
   .composer-bottom {
     font-size: 8px;
+  }
+
+  #credits-display {
+    font-size: 9px;
+    padding: 6px;
+  }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
   }
 }
