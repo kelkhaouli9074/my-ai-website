@@ -1,7 +1,7 @@
 
-/* =====================================
-   MY AI — SUPABASE
-===================================== */
+// =====================================
+// MY AI — SUPABASE CONFIGURATION
+// =====================================
 
 const SUPABASE_URL = "https://qxmmrlbhgmuhpityezvh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_a2bgpHM81IQK21ewBAtJsQ_gk2Y6uMK";
@@ -17,43 +17,57 @@ const supabaseClient = window.supabase.createClient(
 );
 
 
-/* =====================================
-   DOM ELEMENTS
-===================================== */
+// =====================================
+// DOM ELEMENTS
+// =====================================
 
-const form = document.getElementById("chat-form");
-const input = document.getElementById("message-input");
-const messages = document.getElementById("chat-messages");
-const sendBtn = document.getElementById("send-btn");
-const newChatBtn = document.getElementById("new-chat-btn");
+const $ = id => document.getElementById(id);
 
-const imageInput = document.getElementById("image-input");
-const attachBtn = document.getElementById("attach-btn");
-const preview = document.getElementById("image-preview");
-const previewImg = document.getElementById("preview-img");
-const removeImageBtn = document.getElementById("remove-image");
+const form = $("chat-form");
+const input = $("message-input");
+const messages = $("chat-messages");
+const sendBtn = $("send-btn");
+const newChatBtn = $("new-chat-btn");
 
-const loginButton = document.getElementById("google-login");
-const logoutButton = document.getElementById("google-logout");
-const creditsDisplay = document.getElementById("credits-display");
-const accountEmail = document.getElementById("account-email");
+const imageInput = $("image-input");
+const attachBtn = $("attach-btn");
+const preview = $("image-preview");
+const previewImg = $("preview-img");
+const removeImageBtn = $("remove-image");
 
-const voiceInputBtn = document.getElementById("voice-input-btn");
-const voiceOutputBtn = document.getElementById("voice-output-btn");
-const stopVoiceBtn = document.getElementById("stop-voice-btn");
-const voiceStatus = document.getElementById("voice-status");
+const loginButton = $("google-login");
+const logoutButton = $("google-logout");
+const creditsDisplay = $("credits-display");
+const accountEmail = $("account-email");
 
-const languageSelect = document.getElementById("voice-language");
-const voiceSelect = document.getElementById("voice-choice");
-const previewVoiceBtn = document.getElementById("preview-voice-btn");
+const sidebar = $("main-sidebar");
+const sidebarOverlay = $("sidebar-overlay");
+const openSidebarBtn = $("open-sidebar");
+const closeSidebarBtn = $("close-sidebar");
+const sidebarAccountEmail = $("sidebar-account-email");
 
-const voiceSettingsToggle = document.getElementById("voice-settings-toggle");
-const voiceSettingsPanel = document.getElementById("voice-settings-panel");
+const settingsBtn = $("open-settings");
+const aboutBtn = $("open-about");
+const aboutModal = $("about-modal");
+const closeAboutBtn = $("close-about");
+const personalAccountBtn = $("personal-account");
+
+const voiceInputBtn = $("voice-input-btn");
+const voiceOutputBtn = $("voice-output-btn");
+const stopVoiceBtn = $("stop-voice-btn");
+const voiceStatus = $("voice-status");
+
+const languageSelect = $("voice-language");
+const voiceSelect = $("voice-choice");
+const previewVoiceBtn = $("preview-voice-btn");
+
+const voiceSettingsToggle = $("voice-settings-toggle");
+const voiceSettingsPanel = $("voice-settings-panel");
 
 
-/* =====================================
-   MAIN VARIABLES
-===================================== */
+// =====================================
+// MAIN VARIABLES
+// =====================================
 
 let history = [];
 let selectedImage = null;
@@ -72,9 +86,66 @@ let activeConversation = null;
 let localDB = null;
 
 
-/* =====================================
-   LOCAL DATABASE — INDEXEDDB
-===================================== */
+// =====================================
+// SIDEBAR CONTROLS
+// =====================================
+
+function openSidebar() {
+  sidebar.classList.add("sidebar-open");
+  sidebarOverlay.classList.add("overlay-visible");
+  document.body.style.overflow = "hidden";
+}
+
+function closeSidebar() {
+  sidebar.classList.remove("sidebar-open");
+  sidebarOverlay.classList.remove("overlay-visible");
+  document.body.style.overflow = "";
+}
+
+openSidebarBtn.addEventListener("click", openSidebar);
+closeSidebarBtn.addEventListener("click", closeSidebar);
+sidebarOverlay.addEventListener("click", closeSidebar);
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeSidebar();
+    aboutModal.hidden = true;
+  }
+});
+
+// Swipe gestures
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener("touchstart", event => {
+  touchStartX = event.changedTouches[0].screenX;
+  touchStartY = event.changedTouches[0].screenY;
+}, { passive: true });
+
+document.addEventListener("touchend", event => {
+  const endX = event.changedTouches[0].screenX;
+  const endY = event.changedTouches[0].screenY;
+
+  const dx = endX - touchStartX;
+  const dy = endY - touchStartY;
+
+  if (Math.abs(dx) < 75 || Math.abs(dx) < Math.abs(dy) * 1.3) {
+    return;
+  }
+
+  if (dx > 0 && touchStartX < 35) {
+    openSidebar();
+  }
+
+  if (dx < 0 && sidebar.classList.contains("sidebar-open")) {
+    closeSidebar();
+  }
+}, { passive: true });
+
+
+// =====================================
+// LOCAL DATABASE — INDEXEDDB
+// =====================================
 
 const DB_NAME = "MY_AI_LOCAL_DATABASE";
 const DB_VERSION = 1;
@@ -157,10 +228,7 @@ async function getConversation(id, ownerId) {
 
     request.onsuccess = () => {
       const result = request.result;
-
-      resolve(
-        result && result.ownerId === ownerId ? result : null
-      );
+      resolve(result && result.ownerId === ownerId ? result : null);
     };
 
     request.onerror = () => reject(request.error);
@@ -169,14 +237,12 @@ async function getConversation(id, ownerId) {
 
 async function removeConversation(id, ownerId) {
   const conversation = await getConversation(id, ownerId);
-
   if (!conversation) return;
 
   const db = await openLocalDatabase();
 
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
-
     transaction.objectStore(STORE_NAME).delete(id);
 
     transaction.oncomplete = () => resolve(true);
@@ -206,104 +272,12 @@ function createConversation(ownerId, firstMessage) {
 }
 
 
-/* =====================================
-   CHAT HISTORY SIDEBAR
-===================================== */
+// =====================================
+// CHAT HISTORY
+// =====================================
 
 function createHistoryInterface() {
-  if (document.getElementById("myai-history")) return;
-
-  const style = document.createElement("style");
-
-  style.textContent = `
-    #myai-history {
-      margin: 22px 0;
-      padding: 0 12px;
-      color: #ffffff;
-    }
-
-    #myai-history .history-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      color: #b0bdca;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    #myai-history-list {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      max-height: 42vh;
-      overflow-y: auto;
-    }
-
-    .myai-history-item {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      width: 100%;
-      padding: 10px;
-      border: 1px solid transparent;
-      border-radius: 9px;
-      background: transparent;
-      color: #dce5ee;
-      cursor: pointer;
-      text-align: left;
-      font-size: 13px;
-    }
-
-    .myai-history-item:hover,
-    .myai-history-item.active {
-      background: #202d3b;
-      border-color: #405469;
-    }
-
-    .myai-history-title {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .myai-history-delete {
-      border: 0;
-      background: transparent;
-      color: #9eacba;
-      cursor: pointer;
-      padding: 4px;
-      font-size: 16px;
-    }
-
-    .myai-history-delete:hover {
-      color: #ff8585;
-    }
-
-    .myai-history-empty {
-      color: #8998a8;
-      font-size: 12px;
-      padding: 8px 2px;
-    }
-
-    #myai-delete-all {
-      border: 0;
-      background: transparent;
-      color: #aab9c8;
-      font-size: 11px;
-      cursor: pointer;
-    }
-
-    #myai-delete-all:hover {
-      color: #ff8585;
-    }
-  `;
-
-  document.head.appendChild(style);
+  if ($("myai-history")) return;
 
   const section = document.createElement("section");
   section.id = "myai-history";
@@ -318,11 +292,7 @@ function createHistoryInterface() {
     </div>
   `;
 
-  const sidebar = document.querySelector(".sidebar");
-
-  if (sidebar && newChatBtn) {
-    newChatBtn.insertAdjacentElement("afterend", section);
-  }
+  newChatBtn.insertAdjacentElement("afterend", section);
 
   section.addEventListener("click", async event => {
     const deleteButton = event.target.closest(".myai-history-delete");
@@ -343,7 +313,7 @@ function createHistoryInterface() {
 
         await renderConversationList();
       } catch (error) {
-        console.error("Delete error:", error);
+        console.error(error);
         alert("Could not delete this conversation.");
       }
 
@@ -354,33 +324,30 @@ function createHistoryInterface() {
 
     if (item) {
       await openConversation(item.dataset.id);
+      closeSidebar();
     }
   });
 
-  document.getElementById("myai-delete-all").addEventListener(
-    "click",
-    async () => {
-      if (!activeOwnerId) return;
+  $("myai-delete-all").addEventListener("click", async () => {
+    if (!activeOwnerId) return;
 
-      if (!confirm("Delete all your saved conversations?")) return;
+    if (!confirm("Delete all your saved conversations?")) return;
 
-      try {
-        await removeAllConversations(activeOwnerId);
-        startNewChat();
-        await renderConversationList();
-      } catch (error) {
-        console.error(error);
-        alert("Could not delete conversations.");
-      }
+    try {
+      await removeAllConversations(activeOwnerId);
+      startNewChat();
+      await renderConversationList();
+    } catch (error) {
+      console.error(error);
+      alert("Could not delete conversations.");
     }
-  );
+  });
 }
 
 async function renderConversationList() {
   createHistoryInterface();
 
-  const list = document.getElementById("myai-history-list");
-
+  const list = $("myai-history-list");
   if (!list) return;
 
   if (!activeOwnerId) {
@@ -433,9 +400,9 @@ async function renderConversationList() {
 }
 
 
-/* =====================================
-   CONVERSATION MANAGEMENT
-===================================== */
+// =====================================
+// CONVERSATION MANAGEMENT
+// =====================================
 
 async function ensureActiveConversation(firstMessage) {
   if (activeConversation && activeConversation.ownerId === activeOwnerId) {
@@ -469,7 +436,6 @@ async function openConversation(id) {
 
   try {
     const conversation = await getConversation(id, activeOwnerId);
-
     if (!conversation) return;
 
     stopSpeaking();
@@ -479,7 +445,6 @@ async function openConversation(id) {
     }
 
     clearImage();
-
     activeConversation = conversation;
 
     history = conversation.messages
@@ -513,7 +478,7 @@ async function openConversation(id) {
     await renderConversationList();
 
   } catch (error) {
-    console.error("Open conversation error:", error);
+    console.error(error);
     alert("Could not open this conversation.");
   }
 }
@@ -538,13 +503,68 @@ function startNewChat() {
   voiceSettingsToggle.setAttribute("aria-expanded", "false");
 
   renderConversationList();
+  closeSidebar();
   input.focus();
 }
 
 
-/* =====================================
-   VOICE SETTINGS PANEL
-===================================== */
+// =====================================
+// SIDEBAR MENU ACTIONS
+// =====================================
+
+newChatBtn.addEventListener("click", startNewChat);
+
+settingsBtn.addEventListener("click", () => {
+  closeSidebar();
+
+  voiceSettingsPanel.hidden = false;
+  voiceSettingsToggle.setAttribute("aria-expanded", "true");
+
+  setTimeout(() => {
+    voiceSettingsPanel.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }, 100);
+});
+
+aboutBtn.addEventListener("click", () => {
+  closeSidebar();
+  aboutModal.hidden = false;
+});
+
+closeAboutBtn.addEventListener("click", () => {
+  aboutModal.hidden = true;
+});
+
+aboutModal.addEventListener("click", event => {
+  if (event.target === aboutModal) {
+    aboutModal.hidden = true;
+  }
+});
+
+personalAccountBtn.addEventListener("click", async () => {
+  closeSidebar();
+
+  if (currentSession) {
+    const confirmed = confirm(
+      "You are signed in as " +
+      (currentSession.user.email || "your account") +
+      ". Do you want to sign out?"
+    );
+
+    if (confirmed) {
+      logoutButton.click();
+    }
+  } else {
+    loginButton.click();
+  }
+});
+
+
+// =====================================
+// VOICE SETTINGS PANEL
+// =====================================
 
 voiceSettingsToggle.addEventListener("click", () => {
   const isOpen = !voiceSettingsPanel.hidden;
@@ -565,9 +585,9 @@ document.addEventListener("click", event => {
 });
 
 
-/* =====================================
-   LANGUAGE CONFIGURATION
-===================================== */
+// =====================================
+// LANGUAGE CONFIGURATION
+// =====================================
 
 const LANGUAGE_CONFIG = {
   darija: {
@@ -604,11 +624,6 @@ const LANGUAGE_SAMPLES = {
   fr: "Bonjour ! Je suis MY AI. Comment puis-je vous aider ?",
   es: "¡Hola! Soy MY AI. ¿Cómo puedo ayudarte hoy?"
 };
-
-
-/* =====================================
-   LANGUAGE HELPERS
-===================================== */
 
 function getBrowserLanguage() {
   const lang = (navigator.language || "en-US").toLowerCase();
@@ -663,8 +678,8 @@ function detectTextLanguage(text) {
     " hola ", " gracias ", " como ", " porque ", " buenos "
   ];
 
-  const frenchScore = frenchWords.filter(word => value.includes(word)).length;
-  const spanishScore = spanishWords.filter(word => value.includes(word)).length;
+  const frenchScore = frenchWords.filter(w => value.includes(w)).length;
+  const spanishScore = spanishWords.filter(w => value.includes(w)).length;
 
   if (frenchScore > spanishScore && frenchScore > 0) return "fr";
   if (spanishScore > frenchScore && spanishScore > 0) return "es";
@@ -673,9 +688,9 @@ function detectTextLanguage(text) {
 }
 
 
-/* =====================================
-   ACCOUNT MANAGEMENT
-===================================== */
+// =====================================
+// ACCOUNT MANAGEMENT
+// =====================================
 
 async function updateAccount(session = undefined) {
   try {
@@ -695,6 +710,7 @@ async function updateAccount(session = undefined) {
       loginButton.hidden = false;
       logoutButton.hidden = true;
       accountEmail.textContent = "";
+      sidebarAccountEmail.textContent = "Not signed in";
       creditsDisplay.textContent = "Credits: --";
 
       showWelcome();
@@ -713,7 +729,10 @@ async function updateAccount(session = undefined) {
 
     loginButton.hidden = true;
     logoutButton.hidden = false;
+
     accountEmail.textContent = session.user.email || "Signed in";
+    sidebarAccountEmail.textContent = session.user.email || "Signed in";
+
     creditsDisplay.textContent = "Credits: ...";
 
     await renderConversationList();
@@ -739,9 +758,9 @@ async function updateAccount(session = undefined) {
 }
 
 
-/* =====================================
-   GOOGLE LOGIN
-===================================== */
+// =====================================
+// GOOGLE LOGIN
+// =====================================
 
 loginButton.addEventListener("click", async () => {
   loginButton.disabled = true;
@@ -765,9 +784,9 @@ loginButton.addEventListener("click", async () => {
 });
 
 
-/* =====================================
-   GOOGLE LOGOUT
-===================================== */
+// =====================================
+// GOOGLE LOGOUT
+// =====================================
 
 logoutButton.addEventListener("click", async () => {
   logoutButton.disabled = true;
@@ -788,9 +807,9 @@ logoutButton.addEventListener("click", async () => {
 });
 
 
-/* =====================================
-   AUTH STATE
-===================================== */
+// =====================================
+// AUTH STATE
+// =====================================
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
   currentSession = session;
@@ -801,12 +820,12 @@ createHistoryInterface();
 updateAccount();
 
 
-/* =====================================
-   ADD MESSAGE
-===================================== */
+// =====================================
+// ADD MESSAGE
+// =====================================
 
 function addMessage(text, type, imageUrl = null) {
-  const welcome = document.getElementById("welcome");
+  const welcome = $("welcome");
   if (welcome) welcome.remove();
 
   const div = document.createElement("div");
@@ -828,9 +847,9 @@ function addMessage(text, type, imageUrl = null) {
 }
 
 
-/* =====================================
-   MATHJAX
-===================================== */
+// =====================================
+// MATHJAX
+// =====================================
 
 async function renderMath(element) {
   if (!window.MathJax) return;
@@ -844,9 +863,9 @@ async function renderMath(element) {
 }
 
 
-/* =====================================
-   VOICE — AVAILABLE VOICES
-===================================== */
+// =====================================
+// VOICE — AVAILABLE VOICES
+// =====================================
 
 function getDeviceVoices() {
   if (!("speechSynthesis" in window)) return [];
@@ -899,8 +918,7 @@ function getSelectedDeviceVoice() {
   if (!value || value === "default") return null;
 
   const voices = getDeviceVoices();
-  const language = getCurrentLanguage();
-  const config = getSpeechLanguage(language);
+  const config = getSpeechLanguage(getCurrentLanguage());
 
   const matching = voices.filter(voice =>
     voice.lang.toLowerCase().startsWith(config.fallback.toLowerCase())
@@ -921,9 +939,9 @@ if ("speechSynthesis" in window) {
 }
 
 
-/* =====================================
-   VOICE — TEXT TO SPEECH
-===================================== */
+// =====================================
+// VOICE — TEXT TO SPEECH
+// =====================================
 
 function cleanTextForSpeech(text) {
   return text
@@ -992,9 +1010,9 @@ function stopSpeaking() {
 }
 
 
-/* =====================================
-   VOICE PREVIEW
-===================================== */
+// =====================================
+// VOICE PREVIEW
+// =====================================
 
 previewVoiceBtn.addEventListener("click", () => {
   const language = getCurrentLanguage();
@@ -1005,9 +1023,9 @@ previewVoiceBtn.addEventListener("click", () => {
 });
 
 
-/* =====================================
-   LANGUAGE SETTINGS
-===================================== */
+// =====================================
+// LANGUAGE SETTINGS
+// =====================================
 
 const savedLanguage = localStorage.getItem("myai_voice_language");
 
@@ -1043,9 +1061,9 @@ voiceSelect.addEventListener("change", () => {
 });
 
 
-/* =====================================
-   VOICE — SPEECH TO TEXT
-===================================== */
+// =====================================
+// VOICE — SPEECH TO TEXT
+// =====================================
 
 const SpeechRecognition =
   window.SpeechRecognition ||
@@ -1124,7 +1142,7 @@ if (SpeechRecognition) {
 
       input.value = (input.value + " " + spokenText).trim();
       input.style.height = "auto";
-      input.style.height = Math.min(input.scrollHeight, 150) + "px";
+      input.style.height = Math.min(input.scrollHeight,150) + "px";
 
       voiceStatus.textContent = "Sending your message...";
       sendMessage({ speakReply: true });
@@ -1144,9 +1162,9 @@ if (SpeechRecognition) {
 }
 
 
-/* =====================================
-   VOICE BUTTONS
-===================================== */
+// =====================================
+// VOICE BUTTONS
+// =====================================
 
 voiceInputBtn.addEventListener("click", () => {
   if (!recognition) {
@@ -1176,7 +1194,7 @@ voiceInputBtn.addEventListener("click", () => {
 voiceOutputBtn.addEventListener("click", () => {
   autoSpeak = !autoSpeak;
 
-  voiceOutputBtn.classList.toggle("active", autoSpeak);
+  voiceOutputBtn.classList.toggle("active",autoSpeak);
   voiceOutputBtn.textContent = autoSpeak
     ? "🔊 Voice on"
     : "🔊 Voice off";
@@ -1189,9 +1207,9 @@ voiceOutputBtn.addEventListener("click", () => {
 stopVoiceBtn.addEventListener("click", stopSpeaking);
 
 
-/* =====================================
-   IMAGE MANAGEMENT
-===================================== */
+// =====================================
+// IMAGE MANAGEMENT
+// =====================================
 
 function clearImage() {
   selectedImage = null;
@@ -1201,7 +1219,7 @@ function clearImage() {
 }
 
 function compressImage(file) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve,reject) => {
     const objectUrl = URL.createObjectURL(file);
     const img = new Image();
 
@@ -1210,7 +1228,7 @@ function compressImage(file) {
 
       const scale = Math.min(
         1,
-        maxSide / Math.max(img.width, img.height)
+        maxSide / Math.max(img.width,img.height)
       );
 
       const canvas = document.createElement("canvas");
@@ -1225,10 +1243,10 @@ function compressImage(file) {
         return;
       }
 
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
       URL.revokeObjectURL(objectUrl);
 
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+      const dataUrl = canvas.toDataURL("image/jpeg",0.75);
 
       resolve({
         data: dataUrl.split(",")[1],
@@ -1247,9 +1265,9 @@ function compressImage(file) {
 }
 
 
-/* =====================================
-   SELECT IMAGE
-===================================== */
+// =====================================
+// SELECT IMAGE
+// =====================================
 
 attachBtn.addEventListener("click", () => {
   imageInput.click();
@@ -1294,12 +1312,12 @@ imageInput.addEventListener("change", async () => {
   }
 });
 
-removeImageBtn.addEventListener("click", clearImage);
+removeImageBtn.addEventListener("click",clearImage);
 
 
-/* =====================================
-   SEND MESSAGE + AUTO SAVE
-===================================== */
+// =====================================
+// SEND MESSAGE + AUTO SAVE
+// =====================================
 
 async function sendMessage({ speakReply = false } = {}) {
   const text = input.value.trim();
@@ -1353,7 +1371,7 @@ async function sendMessage({ speakReply = false } = {}) {
     input.style.height = "auto";
     clearImage();
 
-    loading = addMessage("Thinking...", "assistant");
+    loading = addMessage("Thinking...","assistant");
 
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -1413,16 +1431,16 @@ async function sendMessage({ speakReply = false } = {}) {
         language = lastSpeechLanguage || detectTextLanguage(data.reply);
       }
 
-      speakText(data.reply, language);
+      speakText(data.reply,language);
     }
 
   } catch (error) {
-    console.error("Chat error:", error);
+    console.error("Chat error:",error);
 
     if (loading) {
       loading.textContent = "Connection error: " + error.message;
     } else {
-      addMessage("Connection error: " + error.message, "assistant");
+      addMessage("Connection error: " + error.message,"assistant");
     }
 
     if (activeConversation) {
@@ -1432,7 +1450,7 @@ async function sendMessage({ speakReply = false } = {}) {
         await saveConversation(activeConversation);
         await renderConversationList();
       } catch (saveError) {
-        console.error("Could not save conversation:", saveError);
+        console.error("Could not save conversation:",saveError);
       }
     }
 
@@ -1447,22 +1465,22 @@ async function sendMessage({ speakReply = false } = {}) {
   }
 }
 
-form.addEventListener("submit", event => {
+form.addEventListener("submit",event => {
   event.preventDefault();
   sendMessage();
 });
 
 
-/* =====================================
-   TEXTAREA SIZE
-===================================== */
+// =====================================
+// TEXTAREA SIZE
+// =====================================
 
-input.addEventListener("input", () => {
+input.addEventListener("input",() => {
   input.style.height = "auto";
-  input.style.height = Math.min(input.scrollHeight, 150) + "px";
+  input.style.height = Math.min(input.scrollHeight,150) + "px";
 });
 
-input.addEventListener("keydown", event => {
+input.addEventListener("keydown",event => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     form.requestSubmit();
@@ -1470,13 +1488,14 @@ input.addEventListener("keydown", event => {
 });
 
 
-/* =====================================
-   WELCOME SCREEN
-===================================== */
+// =====================================
+// WELCOME SCREEN
+// =====================================
 
 function showWelcome() {
   messages.innerHTML = `
     <div class="welcome" id="welcome">
+
       <div class="welcome-orb">
         <div class="orb-core">M</div>
       </div>
@@ -1495,6 +1514,7 @@ function showWelcome() {
       </p>
 
       <div class="suggestions">
+
         <button type="button" class="suggestion"
           data-prompt="Explain a difficult scientific concept simply.">
           <span class="suggestion-icon">◈</span>
@@ -1534,24 +1554,18 @@ function showWelcome() {
           </span>
           <span class="suggestion-arrow">↗</span>
         </button>
+
       </div>
     </div>
   `;
 }
 
 
-/* =====================================
-   NEW CHAT
-===================================== */
+// =====================================
+// SUGGESTIONS
+// =====================================
 
-newChatBtn.addEventListener("click", startNewChat);
-
-
-/* =====================================
-   SUGGESTIONS
-===================================== */
-
-messages.addEventListener("click", event => {
+messages.addEventListener("click",event => {
   const suggestion = event.target.closest(".suggestion");
   if (!suggestion) return;
 
@@ -1559,5 +1573,34 @@ messages.addEventListener("click", event => {
   input.focus();
 
   input.style.height = "auto";
-  input.style.height = Math.min(input.scrollHeight, 150) + "px";
+  input.style.height = Math.min(input.scrollHeight,150) + "px";
 });
+
+
+// =====================================
+// SIDEBAR ACCOUNT DISPLAY
+// =====================================
+
+async function updateSidebarAccount() {
+  try {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) throw error;
+
+    const session = data.session;
+
+    sidebarAccountEmail.textContent = session
+      ? (session.user.email || "Signed in")
+      : "Not signed in";
+
+  } catch (error) {
+    console.error("Sidebar account error:",error);
+    sidebarAccountEmail.textContent = "Account unavailable";
+  }
+}
+
+supabaseClient.auth.onAuthStateChange(() => {
+  setTimeout(updateSidebarAccount,0);
+});
+
+updateSidebarAccount();
