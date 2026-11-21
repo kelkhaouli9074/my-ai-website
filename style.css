@@ -1,7 +1,7 @@
-CSS
 
 /* =========================================
-   MY AI — MATTE BLACK / SLATE / DUSTY BLUE
+   MY AI — MATTE BLACK / DUSTY BLUE
+   COMPLETE STYLESHEET
 ========================================= */
 
 :root {
@@ -12,7 +12,7 @@ CSS
   --panel-3: #29394a;
   --line: #405469;
 
-  --text: #e8eef5;
+  --text: #ffffff;
   --muted: #b0bdca;
   --subtle: #8e9eae;
 
@@ -24,6 +24,8 @@ CSS
   --radius: 16px;
   --transition: .2s ease;
 }
+
+/* GLOBAL */
 
 * {
   box-sizing: border-box;
@@ -38,9 +40,10 @@ body {
 }
 
 body {
-  color: var(--text);
-  font-family: Inter, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  color: #ffffff;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overflow: hidden;
 }
 
@@ -128,7 +131,7 @@ select:focus-visible {
   border: 1px solid #50677e;
   border-radius: 12px;
   background: #202d3b;
-  color: #e3edf6;
+  color: #ffffff;
   font-weight: 650;
   transition: var(--transition);
 }
@@ -160,7 +163,7 @@ select:focus-visible {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #e1e9f1;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
 }
@@ -209,6 +212,7 @@ select:focus-visible {
 }
 
 .sidebar-footer strong {
+  color: #ffffff;
   font-size: 12px;
 }
 
@@ -252,7 +256,7 @@ select:focus-visible {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #c1d0df;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
 }
@@ -283,7 +287,7 @@ select:focus-visible {
   border: 1px solid #50677e;
   border-radius: 9px;
   background: #202d3b;
-  color: #e3edf6;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 650;
   transition: var(--transition);
@@ -298,7 +302,7 @@ select:focus-visible {
 #account-email {
   max-width: 150px;
   overflow: hidden;
-  color: var(--muted);
+  color: #ffffff;
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -382,7 +386,7 @@ select:focus-visible {
 
 .welcome h1 {
   margin: 18px 0 13px;
-  color: #eaf0f6;
+  color: #ffffff;
   font-size: clamp(34px, 5vw, 51px);
   line-height: 1.13;
   font-weight: 800;
@@ -396,7 +400,7 @@ select:focus-visible {
 .welcome p {
   max-width: 510px;
   margin: 0 auto;
-  color: #b0bdca;
+  color: #ffffff;
   font-size: 14px;
   line-height: 1.8;
 }
@@ -453,13 +457,13 @@ select:focus-visible {
 }
 
 .suggestion-copy strong {
-  color: #e4edf6;
+  color: #ffffff;
   font-size: 12px;
 }
 
 .suggestion-copy small {
   margin-top: 5px;
-  color: #a1b0c0;
+  color: #ffffff;
   font-size: 11px;
 }
 
@@ -468,18 +472,25 @@ select:focus-visible {
   font-size: 16px;
 }
 
-/* MESSAGES */
+/* CHAT MESSAGES — AI AND USER */
 
 .message {
   width: min(100%, 850px);
   margin: 0 auto 22px;
   padding: 17px 19px;
   border-radius: 15px;
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.75;
+  color: #ffffff;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 450;
+  line-height: 1.9;
+  letter-spacing: .1px;
   overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* USER MESSAGE */
 
 .message.user {
   width: fit-content;
@@ -488,9 +499,14 @@ select:focus-visible {
   margin-left: auto;
   background: #26394d;
   border: 1px solid #50677e;
-  color: #f0f5fa;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.85;
   border-bottom-right-radius: 5px;
 }
+
+/* AI MESSAGE */
 
 .message.assistant {
   margin-left: auto;
@@ -498,6 +514,17 @@ select:focus-visible {
   background: #19232f;
   border: 1px solid #405469;
   border-bottom-left-radius: 5px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 450;
+  line-height: 1.9;
+}
+
+/* FORCE WHITE TEXT INSIDE MESSAGES */
+
+.message.assistant *,
+.message.user * {
+  color: inherit;
 }
 
 .message p {
@@ -511,13 +538,26 @@ select:focus-visible {
 .message h1,
 .message h2,
 .message h3,
-.message h4 {
-  color: #c2d4e6;
-  line-height: 1.35;
+.message h4,
+.message strong,
+.message b {
+  color: #ffffff !important;
+  font-weight: 750;
+  line-height: 1.5;
 }
 
 .message a {
-  color: var(--purple-light);
+  color: #b9d7f3 !important;
+  text-decoration: underline;
+}
+
+.message li {
+  margin-bottom: 7px;
+}
+
+.message ul,
+.message ol {
+  padding-left: 24px;
 }
 
 .message pre {
@@ -527,11 +567,12 @@ select:focus-visible {
   border: 1px solid #405469;
   border-radius: 10px;
   background: #0b1017;
-  color: #e5edf5;
+  color: #ffffff;
 }
 
 .message code {
-  color: #b9cde0;
+  font-family: "Consolas", "Courier New", monospace !important;
+  color: #b9d7f3;
 }
 
 .message img {
@@ -553,6 +594,7 @@ select:focus-visible {
 
 .message th {
   background: #29394a;
+  color: #ffffff;
 }
 
 .message blockquote {
@@ -560,7 +602,7 @@ select:focus-visible {
   padding: 9px 14px;
   border-left: 3px solid #829bb5;
   background: #202d3b;
-  color: #c1d0df;
+  color: #ffffff;
 }
 
 /* COMPOSER */
@@ -601,13 +643,15 @@ select:focus-visible {
   border: 0;
   outline: 0;
   background: transparent;
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.5;
+  color: #ffffff !important;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 450;
+  line-height: 1.7;
 }
 
 #message-input::placeholder {
-  color: #a1b0c0;
+  color: #aab8c7;
 }
 
 .composer-tool {
@@ -627,7 +671,7 @@ select:focus-visible {
 .composer-tool:hover {
   border-color: #536c86;
   background: #29394a;
-  color: white;
+  color: #ffffff;
 }
 
 #send-btn {
@@ -679,7 +723,7 @@ select:focus-visible {
   border: 1px solid #536c86;
   border-radius: 50%;
   background: #29394a;
-  color: white;
+  color: #ffffff;
   font-size: 17px;
 }
 
@@ -724,7 +768,7 @@ select:focus-visible {
   border: 1px solid #405469;
   border-radius: 9px;
   background: #19232f;
-  color: #c1d0df;
+  color: #ffffff;
   font-size: 11px;
   transition: var(--transition);
 }
@@ -762,13 +806,13 @@ select:focus-visible {
 }
 
 .voice-panel-heading strong {
-  color: #e5edf5;
+  color: #ffffff;
   font-size: 14px;
 }
 
 .voice-panel-heading small {
   margin-top: 5px;
-  color: var(--muted);
+  color: #ffffff;
   font-size: 11px;
 }
 
@@ -792,7 +836,7 @@ select:focus-visible {
 .voice-field label {
   display: block;
   margin-bottom: 8px;
-  color: #c1d0df;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 650;
 }
@@ -804,13 +848,13 @@ select:focus-visible {
   border: 1px solid #50677e;
   border-radius: 9px;
   background: #111923;
-  color: #e5edf5;
+  color: #ffffff;
   font-size: 12px;
 }
 
 .voice-field select option {
   background: #19232f;
-  color: white;
+  color: #ffffff;
 }
 
 .voice-panel-actions {
@@ -826,7 +870,7 @@ select:focus-visible {
   border: 1px solid #50677e;
   border-radius: 9px;
   background: #29394a;
-  color: #e1eaf3;
+  color: #ffffff;
   font-size: 11px;
   transition: var(--transition);
 }
@@ -861,12 +905,12 @@ select {
 input:not([type="file"]),
 textarea,
 select {
-  color: var(--text);
+  color: #ffffff;
 }
 
 ::selection {
   background: #536f8c;
-  color: white;
+  color: #ffffff;
 }
 
 /* RESPONSIVE */
@@ -1019,7 +1063,7 @@ select {
   }
 
   #message-input {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .composer-bottom {
@@ -1032,7 +1076,16 @@ select {
 
   .message {
     padding: 14px;
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.85;
+  }
+
+  .message.user {
+    font-size: 14px;
+  }
+
+  .message.assistant {
+    font-size: 14px;
   }
 }
 
