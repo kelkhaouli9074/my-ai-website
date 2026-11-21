@@ -1,6 +1,6 @@
 
 /* =====================================
-   MY AI — SUPABASE CONFIGURATION
+   MY AI — SUPABASE
 ===================================== */
 
 const SUPABASE_URL = "https://qxmmrlbhgmuhpityezvh.supabase.co";
@@ -18,7 +18,7 @@ const supabaseClient = window.supabase.createClient(
 
 
 /* =====================================
-   CHAT ELEMENTS
+   DOM ELEMENTS
 ===================================== */
 
 const form = document.getElementById("chat-form");
@@ -38,8 +38,6 @@ const logoutButton = document.getElementById("google-logout");
 const creditsDisplay = document.getElementById("credits-display");
 const accountEmail = document.getElementById("account-email");
 
-/* VOICE ELEMENTS */
-
 const voiceInputBtn = document.getElementById("voice-input-btn");
 const voiceOutputBtn = document.getElementById("voice-output-btn");
 const stopVoiceBtn = document.getElementById("stop-voice-btn");
@@ -52,6 +50,11 @@ const previewVoiceBtn = document.getElementById("preview-voice-btn");
 const voiceSettingsToggle = document.getElementById("voice-settings-toggle");
 const voiceSettingsPanel = document.getElementById("voice-settings-panel");
 
+
+/* =====================================
+   MAIN VARIABLES
+===================================== */
+
 let history = [];
 let selectedImage = null;
 let currentSession = null;
@@ -63,6 +66,480 @@ let recognizedText = "";
 let speechError = null;
 let selectedVoice = null;
 let lastSpeechLanguage = null;
+
+let activeOwnerId = null;
+let activeConversation = null;
+let localDB = null;
+
+
+/* =====================================
+   LOCAL DATABASE — INDEXEDDB
+===================================== */
+
+const DB_NAME = "MY_AI_LOCAL_DATABASE";
+const DB_VERSION = 1;
+const STORE_NAME = "conversations";
+
+function openLocalDatabase() {
+  return new Promise((resolve, reject) => {
+    if (localDB) {
+      resolve(localDB);
+      return;
+    }
+
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        const store = db.createObjectStore(STORE_NAME, {
+          keyPath: "id"
+        });
+
+        store.createIndex("ownerId", "ownerId", {
+          unique: false
+        });
+      }
+    };
+
+    request.onsuccess = () => {
+      localDB = request.result;
+      resolve(localDB);
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveConversation(conversation) {
+  const db = await openLocalDatabase();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readwrite");
+
+    transaction.objectStore(STORE_NAME).put(conversation);
+
+    transaction.oncomplete = () => resolve(true);
+    transaction.onerror = () => reject(transaction.error);
+  });
+}
+
+async function getConversations(ownerId) {
+  const db = await openLocalDatabase();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readonly");
+
+    const request = transaction
+      .objectStore(STORE_NAME)
+      .index("ownerId")
+      .getAll(ownerId);
+
+    request.onsuccess = () => {
+      const result = request.result || [];
+      result.sort((a, b) => b.updatedAt - a.updatedAt);
+      resolve(result);
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getConversation(id, ownerId) {
+  const db = await openLocalDatabase();
+
+  return new Promise((resolve, reject) => {
+    const request = db
+      .transaction(STORE_NAME, "readonly")
+      .objectStore(STORE_NAME)
+      .get(id);
+
+    request.onsuccess = () => {
+      const result = request.result;
+
+      resolve(
+        result && result.ownerId === ownerId ? result : null
+      );
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function removeConversation(id, ownerId) {
+  const conversation = await getConversation(id, ownerId);
+
+  if (!conversation) return;
+
+  const db = await openLocalDatabase();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readwrite");
+
+    transaction.objectStore(STORE_NAME).delete(id);
+
+    transaction.oncomplete = () => resolve(true);
+    transaction.onerror = () => reject(transaction.error);
+  });
+}
+
+async function removeAllConversations(ownerId) {
+  const conversations = await getConversations(ownerId);
+
+  for (const conversation of conversations) {
+    await removeConversation(conversation.id, ownerId);
+  }
+}
+
+function createConversation(ownerId, firstMessage) {
+  const now = Date.now();
+
+  return {
+    id: crypto.randomUUID(),
+    ownerId,
+    title: firstMessage.slice(0, 45) || "New chat",
+    createdAt: now,
+    updatedAt: now,
+    messages: []
+  };
+}
+
+
+/* =====================================
+   CHAT HISTORY SIDEBAR
+===================================== */
+
+function createHistoryInterface() {
+  if (document.getElementById("myai-history")) return;
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+    #myai-history {
+      margin: 22px 0;
+      padding: 0 12px;
+      color: #ffffff;
+    }
+
+    #myai-history .history-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      color: #b0bdca;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    #myai-history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 42vh;
+      overflow-y: auto;
+    }
+
+    .myai-history-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: transparent;
+      color: #dce5ee;
+      cursor: pointer;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .myai-history-item:hover,
+    .myai-history-item.active {
+      background: #202d3b;
+      border-color: #405469;
+    }
+
+    .myai-history-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .myai-history-delete {
+      border: 0;
+      background: transparent;
+      color: #9eacba;
+      cursor: pointer;
+      padding: 4px;
+      font-size: 16px;
+    }
+
+    .myai-history-delete:hover {
+      color: #ff8585;
+    }
+
+    .myai-history-empty {
+      color: #8998a8;
+      font-size: 12px;
+      padding: 8px 2px;
+    }
+
+    #myai-delete-all {
+      border: 0;
+      background: transparent;
+      color: #aab9c8;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    #myai-delete-all:hover {
+      color: #ff8585;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  const section = document.createElement("section");
+  section.id = "myai-history";
+
+  section.innerHTML = `
+    <div class="history-heading">
+      <span>Recent chats</span>
+      <button id="myai-delete-all" type="button">Clear all</button>
+    </div>
+    <div id="myai-history-list">
+      <div class="myai-history-empty">No conversations yet</div>
+    </div>
+  `;
+
+  const sidebar = document.querySelector(".sidebar");
+
+  if (sidebar && newChatBtn) {
+    newChatBtn.insertAdjacentElement("afterend", section);
+  }
+
+  section.addEventListener("click", async event => {
+    const deleteButton = event.target.closest(".myai-history-delete");
+
+    if (deleteButton) {
+      event.stopPropagation();
+
+      const id = deleteButton.dataset.id;
+
+      if (!confirm("Delete this conversation?")) return;
+
+      try {
+        await removeConversation(id, activeOwnerId);
+
+        if (activeConversation?.id === id) {
+          startNewChat();
+        }
+
+        await renderConversationList();
+      } catch (error) {
+        console.error("Delete error:", error);
+        alert("Could not delete this conversation.");
+      }
+
+      return;
+    }
+
+    const item = event.target.closest(".myai-history-item");
+
+    if (item) {
+      await openConversation(item.dataset.id);
+    }
+  });
+
+  document.getElementById("myai-delete-all").addEventListener(
+    "click",
+    async () => {
+      if (!activeOwnerId) return;
+
+      if (!confirm("Delete all your saved conversations?")) return;
+
+      try {
+        await removeAllConversations(activeOwnerId);
+        startNewChat();
+        await renderConversationList();
+      } catch (error) {
+        console.error(error);
+        alert("Could not delete conversations.");
+      }
+    }
+  );
+}
+
+async function renderConversationList() {
+  createHistoryInterface();
+
+  const list = document.getElementById("myai-history-list");
+
+  if (!list) return;
+
+  if (!activeOwnerId) {
+    list.innerHTML =
+      '<div class="myai-history-empty">Sign in to see your chats</div>';
+    return;
+  }
+
+  try {
+    const conversations = await getConversations(activeOwnerId);
+
+    list.innerHTML = "";
+
+    if (!conversations.length) {
+      list.innerHTML =
+        '<div class="myai-history-empty">No conversations yet</div>';
+      return;
+    }
+
+    conversations.forEach(conversation => {
+      const item = document.createElement("div");
+      item.className = "myai-history-item";
+
+      if (activeConversation?.id === conversation.id) {
+        item.classList.add("active");
+      }
+
+      item.dataset.id = conversation.id;
+
+      const title = document.createElement("span");
+      title.className = "myai-history-title";
+      title.textContent = "▤  " + conversation.title;
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "myai-history-delete";
+      deleteButton.dataset.id = conversation.id;
+      deleteButton.textContent = "×";
+      deleteButton.title = "Delete conversation";
+
+      item.append(title, deleteButton);
+      list.appendChild(item);
+    });
+
+  } catch (error) {
+    console.error("History loading error:", error);
+    list.innerHTML =
+      '<div class="myai-history-empty">Could not load conversations</div>';
+  }
+}
+
+
+/* =====================================
+   CONVERSATION MANAGEMENT
+===================================== */
+
+async function ensureActiveConversation(firstMessage) {
+  if (activeConversation && activeConversation.ownerId === activeOwnerId) {
+    return activeConversation;
+  }
+
+  if (!activeOwnerId) {
+    throw new Error("Please sign in first.");
+  }
+
+  activeConversation = createConversation(activeOwnerId, firstMessage);
+
+  await saveConversation(activeConversation);
+  await renderConversationList();
+
+  return activeConversation;
+}
+
+async function storeMessage(message) {
+  if (!activeConversation) return;
+
+  activeConversation.messages.push(message);
+  activeConversation.updatedAt = Date.now();
+
+  await saveConversation(activeConversation);
+  await renderConversationList();
+}
+
+async function openConversation(id) {
+  if (!activeOwnerId) return;
+
+  try {
+    const conversation = await getConversation(id, activeOwnerId);
+
+    if (!conversation) return;
+
+    stopSpeaking();
+
+    if (isListening && recognition) {
+      recognition.stop();
+    }
+
+    clearImage();
+
+    activeConversation = conversation;
+
+    history = conversation.messages
+      .filter(message => message.sentToModel)
+      .filter(message =>
+        message.role === "user" || message.role === "assistant"
+      )
+      .map(message => ({
+        role: message.role,
+        content: message.content
+      }));
+
+    messages.innerHTML = "";
+
+    if (!conversation.messages.length) {
+      showWelcome();
+    } else {
+      conversation.messages.forEach(message => {
+        const element = addMessage(
+          message.content,
+          message.role,
+          message.imagePreview || null
+        );
+
+        if (message.role === "assistant") {
+          renderMath(element);
+        }
+      });
+    }
+
+    await renderConversationList();
+
+  } catch (error) {
+    console.error("Open conversation error:", error);
+    alert("Could not open this conversation.");
+  }
+}
+
+function startNewChat() {
+  history = [];
+  activeConversation = null;
+
+  stopSpeaking();
+
+  if (isListening && recognition) {
+    recognition.stop();
+  }
+
+  clearImage();
+  showWelcome();
+
+  input.value = "";
+  input.style.height = "auto";
+
+  voiceSettingsPanel.hidden = true;
+  voiceSettingsToggle.setAttribute("aria-expanded", "false");
+
+  renderConversationList();
+  input.focus();
+}
 
 
 /* =====================================
@@ -172,9 +649,7 @@ function getRecognitionLanguage() {
 }
 
 function detectTextLanguage(text) {
-  if (/[\u0600-\u06FF]/.test(text)) {
-    return "ar";
-  }
+  if (/[\u0600-\u06FF]/.test(text)) return "ar";
 
   const value = " " + text.toLowerCase() + " ";
 
@@ -188,13 +663,8 @@ function detectTextLanguage(text) {
     " hola ", " gracias ", " como ", " porque ", " buenos "
   ];
 
-  const frenchScore = frenchWords.filter(word =>
-    value.includes(word)
-  ).length;
-
-  const spanishScore = spanishWords.filter(word =>
-    value.includes(word)
-  ).length;
+  const frenchScore = frenchWords.filter(word => value.includes(word)).length;
+  const spanishScore = spanishWords.filter(word => value.includes(word)).length;
 
   if (frenchScore > spanishScore && frenchScore > 0) return "fr";
   if (spanishScore > frenchScore && spanishScore > 0) return "es";
@@ -218,17 +688,35 @@ async function updateAccount(session = undefined) {
     currentSession = session;
 
     if (!session) {
+      activeOwnerId = null;
+      activeConversation = null;
+      history = [];
+
       loginButton.hidden = false;
       logoutButton.hidden = true;
       accountEmail.textContent = "";
       creditsDisplay.textContent = "Credits: --";
+
+      showWelcome();
+      await renderConversationList();
       return;
+    }
+
+    const newOwnerId = session.user.id;
+
+    if (activeOwnerId !== newOwnerId) {
+      activeOwnerId = newOwnerId;
+      activeConversation = null;
+      history = [];
+      showWelcome();
     }
 
     loginButton.hidden = true;
     logoutButton.hidden = false;
     accountEmail.textContent = session.user.email || "Signed in";
     creditsDisplay.textContent = "Credits: ...";
+
+    await renderConversationList();
 
     const { data: profile, error } = await supabaseClient
       .from("profiles")
@@ -288,7 +776,6 @@ logoutButton.addEventListener("click", async () => {
     const { error } = await supabaseClient.auth.signOut();
     if (error) throw error;
 
-    history = [];
     stopSpeaking();
     await updateAccount(null);
 
@@ -310,6 +797,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   setTimeout(() => updateAccount(session), 0);
 });
 
+createHistoryInterface();
 updateAccount();
 
 
@@ -370,10 +858,9 @@ function refreshVoiceList() {
   const language = getCurrentLanguage();
   const config = getSpeechLanguage(language);
 
-  const matching = voices.filter(voice => {
-    const voiceLang = voice.lang.toLowerCase();
-    return voiceLang.startsWith(config.fallback.toLowerCase());
-  });
+  const matching = voices.filter(voice =>
+    voice.lang.toLowerCase().startsWith(config.fallback.toLowerCase())
+  );
 
   voiceSelect.innerHTML = "";
 
@@ -393,6 +880,7 @@ function refreshVoiceList() {
   automaticOption.textContent = matching.length
     ? "Automatic — recommended"
     : "Automatic — device default";
+
   voiceSelect.appendChild(automaticOption);
 
   available.forEach((voice, index) => {
@@ -419,6 +907,7 @@ function getSelectedDeviceVoice() {
   );
 
   const available = matching.length ? matching : voices;
+
   return available[Number(value)] || null;
 }
 
@@ -517,7 +1006,7 @@ previewVoiceBtn.addEventListener("click", () => {
 
 
 /* =====================================
-   LANGUAGE AND VOICE SETTINGS
+   LANGUAGE SETTINGS
 ===================================== */
 
 const savedLanguage = localStorage.getItem("myai_voice_language");
@@ -530,9 +1019,7 @@ if (
 }
 
 languageSelect.addEventListener("change", () => {
-  if (isListening && recognition) {
-    recognition.stop();
-  }
+  if (isListening && recognition) recognition.stop();
 
   stopSpeaking();
 
@@ -631,11 +1118,9 @@ if (SpeechRecognition) {
     if (spokenText && !speechError) {
       const selectedLanguage = languageSelect.value;
 
-      if (selectedLanguage === "auto") {
-        lastSpeechLanguage = detectTextLanguage(spokenText);
-      } else {
-        lastSpeechLanguage = selectedLanguage;
-      }
+      lastSpeechLanguage = selectedLanguage === "auto"
+        ? detectTextLanguage(spokenText)
+        : selectedLanguage;
 
       input.value = (input.value + " " + spokenText).trim();
       input.style.height = "auto";
@@ -809,24 +1294,17 @@ imageInput.addEventListener("change", async () => {
   }
 });
 
-
-/* =====================================
-   REMOVE IMAGE
-===================================== */
-
 removeImageBtn.addEventListener("click", clearImage);
 
 
 /* =====================================
-   SEND MESSAGE
+   SEND MESSAGE + AUTO SAVE
 ===================================== */
 
 async function sendMessage({ speakReply = false } = {}) {
   const text = input.value.trim();
 
-  if ((!text && !selectedImage) || sendBtn.disabled) {
-    return;
-  }
+  if ((!text && !selectedImage) || sendBtn.disabled) return;
 
   const { data: sessionData, error: sessionError } =
     await supabaseClient.auth.getSession();
@@ -845,24 +1323,38 @@ async function sendMessage({ speakReply = false } = {}) {
   const messageText = text || "Please analyze this image.";
   const imageToSend = selectedImage;
 
-  addMessage(
-    messageText,
-    "user",
-    imageToSend ? imageToSend.preview : null
-  );
-
-  input.value = "";
-  input.style.height = "auto";
-  clearImage();
-
   input.disabled = true;
   sendBtn.disabled = true;
   attachBtn.disabled = true;
   voiceInputBtn.disabled = true;
 
-  const loading = addMessage("Thinking...", "assistant");
+  let loading = null;
 
   try {
+    await ensureActiveConversation(messageText);
+
+    const userMessage = {
+      role: "user",
+      content: messageText,
+      imagePreview: imageToSend ? imageToSend.preview : null,
+      sentToModel: false,
+      timestamp: Date.now()
+    };
+
+    await storeMessage(userMessage);
+
+    addMessage(
+      messageText,
+      "user",
+      imageToSend ? imageToSend.preview : null
+    );
+
+    input.value = "";
+    input.style.height = "auto";
+    clearImage();
+
+    loading = addMessage("Thinking...", "assistant");
+
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
@@ -894,10 +1386,25 @@ async function sendMessage({ speakReply = false } = {}) {
     loading.textContent = data.reply;
     await renderMath(loading);
 
+    userMessage.sentToModel = true;
+
+    const assistantMessage = {
+      role: "assistant",
+      content: data.reply,
+      sentToModel: true,
+      timestamp: Date.now()
+    };
+
+    activeConversation.messages.push(assistantMessage);
+    activeConversation.updatedAt = Date.now();
+
     history.push(
       { role: "user", content: messageText },
       { role: "assistant", content: data.reply }
     );
+
+    await saveConversation(activeConversation);
+    await renderConversationList();
 
     if (speakReply || autoSpeak) {
       let language = getCurrentLanguage();
@@ -910,7 +1417,24 @@ async function sendMessage({ speakReply = false } = {}) {
     }
 
   } catch (error) {
-    loading.textContent = "Connection error: " + error.message;
+    console.error("Chat error:", error);
+
+    if (loading) {
+      loading.textContent = "Connection error: " + error.message;
+    } else {
+      addMessage("Connection error: " + error.message, "assistant");
+    }
+
+    if (activeConversation) {
+      activeConversation.updatedAt = Date.now();
+
+      try {
+        await saveConversation(activeConversation);
+        await renderConversationList();
+      } catch (saveError) {
+        console.error("Could not save conversation:", saveError);
+      }
+    }
 
   } finally {
     input.disabled = false;
@@ -964,6 +1488,7 @@ function showWelcome() {
       </div>
 
       <h1>Think beyond<br><span>the ordinary.</span></h1>
+
       <p>
         Ask questions, explore ideas, create something new
         or learn something you have always wanted to understand.
@@ -1019,25 +1544,7 @@ function showWelcome() {
    NEW CHAT
 ===================================== */
 
-newChatBtn.addEventListener("click", () => {
-  history = [];
-  stopSpeaking();
-
-  if (isListening && recognition) {
-    recognition.stop();
-  }
-
-  clearImage();
-  showWelcome();
-
-  input.value = "";
-  input.style.height = "auto";
-
-  voiceSettingsPanel.hidden = true;
-  voiceSettingsToggle.setAttribute("aria-expanded", "false");
-
-  input.focus();
-});
+newChatBtn.addEventListener("click", startNewChat);
 
 
 /* =====================================
