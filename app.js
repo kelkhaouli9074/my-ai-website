@@ -1,4 +1,27 @@
 
+/* =====================================
+   MY AI — SUPABASE CONFIGURATION
+===================================== */
+
+const SUPABASE_URL = "https://qxmmrlbhgmuhpityezvh.supabase.co";
+
+const SUPABASE_KEY = "sb_publishable_a2bgpHM81IQK21ewBAtJsQ_gk2Y6uMK";
+
+if (!window.supabase) {
+  alert("Supabase could not load. Please refresh the page.");
+  throw new Error("Supabase SDK missing");
+}
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+/* =====================================
+   CHAT ELEMENTS
+===================================== */
+
 const form = document.getElementById("chat-form");
 const input = document.getElementById("message-input");
 const messages = document.getElementById("chat-messages");
@@ -11,11 +34,142 @@ const preview = document.getElementById("image-preview");
 const previewImg = document.getElementById("preview-img");
 const removeImageBtn = document.getElementById("remove-image");
 
+const loginButton = document.getElementById("google-login");
+const logoutButton = document.getElementById("google-logout");
+const creditsDisplay = document.getElementById("credits-display");
+const accountEmail = document.getElementById("account-email");
+
 let history = [];
 let selectedImage = null;
+let currentSession = null;
+
+
+/* =====================================
+   ACCOUNT MANAGEMENT
+===================================== */
+
+async function updateAccount(session = undefined) {
+  try {
+    if (session === undefined) {
+      const result = await supabaseClient.auth.getSession();
+
+      if (result.error) throw result.error;
+
+      session = result.data.session;
+    }
+
+    currentSession = session;
+
+    if (!session) {
+      loginButton.hidden = false;
+      logoutButton.hidden = true;
+
+      accountEmail.textContent = "";
+      creditsDisplay.textContent = "Credits: --";
+
+      return;
+    }
+
+    loginButton.hidden = true;
+    logoutButton.hidden = false;
+
+    accountEmail.textContent =
+      session.user.email || "Signed in";
+
+    creditsDisplay.textContent = "Credits: ...";
+
+    const { data: profile, error } = await supabaseClient
+      .from("profiles")
+      .select("credits")
+      .eq("id", session.user.id)
+      .single();
+
+    if (error) {
+      console.error("Profile error:", error.message);
+      creditsDisplay.textContent = "Credits unavailable";
+      return;
+    }
+
+    creditsDisplay.textContent =
+      "Credits: " + profile.credits;
+
+  } catch (error) {
+    console.error("Account error:", error);
+    creditsDisplay.textContent = "Credits unavailable";
+  }
+}
+
+
+/* =====================================
+   GOOGLE LOGIN
+===================================== */
+
+loginButton.addEventListener("click", async () => {
+  loginButton.disabled = true;
+  loginButton.textContent = "Connecting...";
+
+  try {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+
+    if (error) throw error;
+
+  } catch (error) {
+    alert("Google login error: " + error.message);
+
+    loginButton.disabled = false;
+    loginButton.textContent = "Sign in with Google";
+  }
+});
+
+
+/* =====================================
+   GOOGLE LOGOUT
+===================================== */
+
+logoutButton.addEventListener("click", async () => {
+  logoutButton.disabled = true;
+
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) throw error;
+
+    history = [];
+    await updateAccount(null);
+
+  } catch (error) {
+    alert("Logout error: " + error.message);
+
+  } finally {
+    logoutButton.disabled = false;
+  }
+});
+
+
+/* =====================================
+   AUTH STATE
+===================================== */
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  currentSession = session;
+  setTimeout(() => updateAccount(session), 0);
+});
+
+updateAccount();
+
+
+/* =====================================
+   ADD MESSAGE
+===================================== */
 
 function addMessage(text, type, imageUrl = null) {
   const welcome = document.getElementById("welcome");
+
   if (welcome) welcome.remove();
 
   const div = document.createElement("div");
@@ -24,9 +178,11 @@ function addMessage(text, type, imageUrl = null) {
 
   if (imageUrl) {
     const img = document.createElement("img");
+
     img.src = imageUrl;
     img.className = "message-image";
     img.alt = "Uploaded image";
+
     div.appendChild(img);
   }
 
@@ -36,23 +192,36 @@ function addMessage(text, type, imageUrl = null) {
   return div;
 }
 
+
+/* =====================================
+   MATHJAX
+===================================== */
+
 async function renderMath(element) {
   if (!window.MathJax) return;
 
   try {
     await window.MathJax.startup.promise;
     await window.MathJax.typesetPromise([element]);
+
   } catch (error) {
     console.error("MathJax error:", error);
   }
 }
 
+
+/* =====================================
+   IMAGE MANAGEMENT
+===================================== */
+
 function clearImage() {
   selectedImage = null;
   imageInput.value = "";
+
   preview.hidden = true;
   previewImg.removeAttribute("src");
 }
+
 
 function compressImage(file) {
   return new Promise((resolve, reject) => {
@@ -61,6 +230,7 @@ function compressImage(file) {
 
     img.onload = () => {
       const maxSide = 1280;
+
       const scale = Math.min(
         1,
         maxSide / Math.max(img.width, img.height)
@@ -72,6 +242,12 @@ function compressImage(file) {
       canvas.height = Math.round(img.height * scale);
 
       const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Image processing failed"));
+        return;
+      }
 
       ctx.drawImage(
         img,
@@ -101,11 +277,15 @@ function compressImage(file) {
   });
 }
 
-/* SELECT IMAGE */
+
+/* =====================================
+   SELECT IMAGE
+===================================== */
 
 attachBtn.addEventListener("click", () => {
   imageInput.click();
 });
+
 
 imageInput.addEventListener("change", async () => {
   const file = imageInput.files[0];
@@ -147,11 +327,17 @@ imageInput.addEventListener("change", async () => {
   }
 });
 
-/* REMOVE IMAGE */
+
+/* =====================================
+   REMOVE IMAGE
+===================================== */
 
 removeImageBtn.addEventListener("click", clearImage);
 
-/* SEND MESSAGE */
+
+/* =====================================
+   SEND MESSAGE
+===================================== */
 
 async function sendMessage() {
   const text = input.value.trim();
@@ -160,7 +346,24 @@ async function sendMessage() {
     return;
   }
 
-  const messageText = text || "Please analyze this image.";
+  const { data: sessionData, error: sessionError } =
+    await supabaseClient.auth.getSession();
+
+  if (sessionError || !sessionData.session) {
+    addMessage(
+      "Please sign in with Google before using MY AI.",
+      "assistant"
+    );
+
+    loginButton.hidden = false;
+    return;
+  }
+
+  const session = sessionData.session;
+
+  const messageText =
+    text || "Please analyze this image.";
+
   const imageToSend = selectedImage;
 
   addMessage(
@@ -183,12 +386,16 @@ async function sendMessage() {
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
+
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + session.access_token
       },
+
       body: JSON.stringify({
         message: messageText,
         history: history,
+
         image: imageToSend
           ? {
               data: imageToSend.data,
@@ -218,7 +425,8 @@ async function sendMessage() {
     );
 
   } catch (error) {
-    loading.textContent = "Connection error: " + error.message;
+    loading.textContent =
+      "Connection error: " + error.message;
 
   } finally {
     input.disabled = false;
@@ -230,18 +438,24 @@ async function sendMessage() {
   }
 }
 
+
 form.addEventListener("submit", event => {
   event.preventDefault();
   sendMessage();
 });
 
-/* TEXTAREA SIZE */
+
+/* =====================================
+   TEXTAREA SIZE
+===================================== */
 
 input.addEventListener("input", () => {
   input.style.height = "auto";
+
   input.style.height =
     Math.min(input.scrollHeight, 150) + "px";
 });
+
 
 input.addEventListener("keydown", event => {
   if (event.key === "Enter" && !event.shiftKey) {
@@ -250,7 +464,10 @@ input.addEventListener("keydown", event => {
   }
 });
 
-/* NEW CHAT */
+
+/* =====================================
+   NEW CHAT
+===================================== */
 
 newChatBtn.addEventListener("click", () => {
   history = [];
@@ -259,11 +476,14 @@ newChatBtn.addEventListener("click", () => {
 
   messages.innerHTML = `
     <div class="welcome" id="welcome">
-      <div class="welcome-icon">✦</div>
+      <div class="welcome-icon">⎈</div>
       <div class="welcome-tag">YOUR PERSONAL AI</div>
 
       <h1>What can I help you with?</h1>
-      <p>Ask questions, explore ideas, or learn something new.</p>
+
+      <p>
+        Ask questions, explore ideas, or learn something new.
+      </p>
 
       <div class="suggestions">
 
@@ -312,7 +532,10 @@ newChatBtn.addEventListener("click", () => {
   input.focus();
 });
 
-/* SUGGESTIONS */
+
+/* =====================================
+   SUGGESTIONS
+===================================== */
 
 messages.addEventListener("click", event => {
   const suggestion = event.target.closest(".suggestion");
@@ -323,6 +546,7 @@ messages.addEventListener("click", event => {
   input.focus();
 
   input.style.height = "auto";
+
   input.style.height =
     Math.min(input.scrollHeight, 150) + "px";
 });
